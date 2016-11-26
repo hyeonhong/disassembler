@@ -34,7 +34,7 @@ passed\@    CMPI.B      #$39,D1
             SUBI.B      #$7,D1
 to_hex\@    SUBI.B      #$30,D1
             ADDQ.B      #1,D4
-            ADDI.L      #$00000001,D4
+            ANDI.L      #$00000001,D4
             CMPI.B      #0,D4               *Is D4 even or odd?
             BEQ         even_num\@
             MOVE.B      D1,D2
@@ -216,14 +216,14 @@ val_start   LEA         reader,A2
             LEA         start_addr,A6       *start address chosen
             BRA         val_next
 end_chosen2 LEA         end_addr,A6         *end address chosen
-val_next    MOVE.L      (A2)+,D2            * temporarily hold the ascii-hex value in D2,D3
-            MOVE.L      (A2)+,D3
+val_next    MOVE.L      (A2)+,D2            * temporarily hold the ascii-hex value in D2
             MOVE.L      D2,D6
             val_check
-            MOVE.L      D3,D6
+            MOVE.L      (A2)+,D2
+            MOVE.L      D2,D6
             val_check
             
-            * boundary check and converting the address to even number
+            * even boundary check and converting the address to even number
             CMPI.B      #0,(A5)
             BNE         end_chosen3
             LEA         start_addr,A6       *start address chosen
@@ -919,6 +919,7 @@ terminator        DC.B        0                   *Null terminator
 
 
          END         pgm_start           *End of program and load address
+
 
 
 
