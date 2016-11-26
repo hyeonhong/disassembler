@@ -156,7 +156,10 @@ stack       EQU         $A0000              *Put stack here
             BSR         io_code
             MOVE.B      #1,(A5)             *taking user input for end address
             BSR         io_code
-            
+
+            LEA         newline,A1
+            MOVE.B      #13,D0
+            TRAP        #15            
             
             *assign the start & end address to A0 & A4                        
             LEA         start_addr,A4
@@ -881,6 +884,7 @@ string4     DC.B    'Invalid character detected. Only hexadecimal characters are
 string5     DC.B    'Memory out of range. The correct memory range is 0 - FFFFFF (16MB) ',0
 string6     DC.B    'Address modified to enforce the even address boundary.',0
 string7     DC.B    'Illegal address. End address should be greater or equal to the start address.',0
+newline     DC.B    '',0
 
 reader      DS.L    100
 reader2     DS.L    100
@@ -934,7 +938,8 @@ terminator        DC.B        0                   *Null terminator
 
 
 
+
 *~Font name~Courier New~
-*~Font size~14~
+*~Font size~12~
 *~Tab type~1~
 *~Tab size~4~
