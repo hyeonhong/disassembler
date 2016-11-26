@@ -5,10 +5,11 @@
 * Description: -------------------------------------------------------------------------------k
 *----------------------------------------------------------------------------------------------------
 
-
+*D6 and A6 is set, prior to calling this Macro
 val_check   MACRO
             MOVE.L      #$FF000000,D5
             MOVE.L      #24,D7
+            CLR.L       D4
 val_loop\@  MOVE.L      D6,D1               *D6 holds the original hex-value
             AND.L       D5,D1
             LSR.L       D7,D1               *shift bits to the right
@@ -32,30 +33,8 @@ passed\@    CMPI.B      #$39,D1
             BLE         to_hex\@
             SUBI.B      #$7,D1
 to_hex\@    SUBI.B      #$30,D1
-            LSR.L       #8,D5
-            SUBQ.B      #8,D7
-            CMPI.B      #0,D7
-            BGE         val_loop\@
-            ENDM
-
-*D6 and A6 is set, prior to calling this Macro
-ascii2hex   MACRO
-            MOVE.L      #$FF000000,D5
-            MOVE.L      #24,D7
-            CLR.L       D4
-asc_loop\@  MOVE.L      D6,D1               *D6 holds the original ascii-hex value
-            AND.L       D5,D1
-            LSR.L       D7,D1               *shift bits to the right            
-            CMPI.B      #$39,D1
-            BLE         to_hexval\@
-            SUBI.B      #$7,D1
-to_hexval\@ SUBI.B      #$30,D1
             ADDQ.B      #1,D4
-            *D4 MOD 2 = even/odd ?
-            DIVU        #2,D4
-            SWAP        D4                  *move the remainder to the lower-end of D4
-            ANDI.L      #$00FF,D4           *clean up the upper-end of D4
-            
+            ADDI.L      #$00000001,D4
             CMPI.B      #0,D4               *Is D4 even or odd?
             BEQ         even_num\@
             MOVE.B      D1,D2
@@ -67,10 +46,8 @@ even_num\@  LSL.B       #4,D2
 hex_next\@  LSR.L       #8,D5
             SUBQ.B      #8,D7
             CMPI.B      #0,D7
-            BGE         asc_loop\@            
+            BGE         val_loop\@
             ENDM
-
-
 
 
 *convert reg_digits to ascii-hex and write to the buffer
@@ -180,30 +157,7 @@ stack       EQU         $A0000              *Put stack here
             MOVE.B      #1,(A5)             *taking user input for end address
             BSR         io_code
             
-            *copy from the start & end address to the backup
-            LEA         start_addr,A6
-            LEA         backup_sta,A3
-            MOVE.L      (A6)+,(A3)+
-            MOVE.L      (A6)+,(A3)+            
-            LEA         end_addr,A6
-            LEA         backup_end,A3
-            MOVE.L      (A6)+,(A3)+
-            MOVE.L      (A6)+,(A3)+
             
-            *convert the ascii to hex
-            LEA         start_addr,A6
-            LEA         backup_sta,A3
-            MOVE.L      (A3)+,D6
-            ascii2hex
-            MOVE.L      (A3)+,D6
-            ascii2hex            
-            LEA         end_addr,A6
-            LEA         backup_end,A3
-            MOVE.L      (A3)+,D6
-            ascii2hex
-            MOVE.L      (A3)+,D6
-            ascii2hex
-
             *assign the start & end address to A0 & A4                        
             LEA         start_addr,A4
             MOVE.L     (A4),D0
@@ -255,67 +209,54 @@ ask_next    MOVE.B      #14,D0
             BLT         too_short                   * if ( D1 < 8) length is too short
             BGT         too_long                    * if ( D1 > 8) length is too long
 
-            * validity check
+            * validity check + conversion to hex + writing to memory variable (start_addr & end_addr)
 val_start   LEA         reader,A2
-            LEA         start_addr,A6
-            MOVE.L      (A2)+,D2                    * temporarily hold the ascii-hex value in D2,D3
+            CMPI.B      #0,(A5)
+            BNE         end_chosen2
+            LEA         start_addr,A6       *start address chosen
+            BRA         val_next
+end_chosen2 LEA         end_addr,A6         *end address chosen
+val_next    MOVE.L      (A2)+,D2            * temporarily hold the ascii-hex value in D2,D3
             MOVE.L      (A2)+,D3
             MOVE.L      D2,D6
             val_check
             MOVE.L      D3,D6
             val_check
             
-            * boundary check and convert the address to even number
-            MOVE.L      D3,D7
-            ANDI.W      #$0001,D7       ******* right now it's not comparing with hex. it's comparing with ascii - fix it !
-            CMPI.W      #0,D7
+            * boundary check and converting the address to even number
+            CMPI.B      #0,(A5)
+            BNE         end_chosen3
+            LEA         start_addr,A6       *start address chosen
+            BRA         bound_next
+end_chosen3 LEA         end_addr,A6         *end address chosen
+bound_next  MOVE.L      (A6),D7
+            ANDI.L      #$00000001,D7       *Is it even or not?
+            CMPI.B      #0,D7
             BEQ         range_check
-            CMPI.B      #0,(A5)                     *if it's end address, move to range check
+            CMPI.B      #0,(A5)             *if it's end address, move to range check
             BNE         range_check            
-            SUBA.L      #1,A0
+            SUBI.L      #1,(A6)             *convert the address to even number
             LEA         string6,A1
             MOVE.B      #13,D0
             TRAP        #15
 
             * memory range check
-range_check MOVE.L      D2,D6
-            MOVE.L      #$FF000000,D5
-            MOVE.L      #24,D7
-range_loop  MOVE.L      D6,D1               *D6 holds the original hex-value
-            AND.L       D5,D1
-            LSR.L       D7,D1               *shift bits to the right
-
-            CMPI.B      #$30,D1             * D1 == 0 ?
+range_check MOVE.L      (A6),D7
+            ANDI.L      #$11000000,D7
+            CMPI.L      #0,D7
             BNE         out_of_rang
-            LSR.L       #8,D5
-            SUBQ.B      #8,D7
-            CMPI.B      #16,D7
-            BGE         range_loop
 
-                        
-write_start LEA         reader,A2
-
-            CMPI.B      #0,(A5)
-            BEQ         sta_chosen
-            
             *legality check - end address should be greater or equal to start address
-            LEA         start_addr,A6 
-            MOVE.L      (A6)+,D2          * temporarily hold the ascii-hex value in D2,D3
-            MOVE.L      (A6)+,D3
-            LEA         reader,A6
-            MOVE.L      (A6)+,D4          * temporarily hold the ascii-hex value in D4,D5
-            MOVE.L      (A6)+,D5
-            SUB.L       D2,D4
-            BMI         illegal
-            SUB.L       D3,D5
+legal_check CMPI.B      #0,(A5)
+            BEQ         exit_io
+            LEA         start_addr,A6
+            MOVE.L      (A6),D2
+            LEA         end_addr,A6
+            MOVE.L      (A6),D3
+            SUB.L       D2,D3
             BMI         illegal
 
-            LEA         end_addr,A6         *end address chosen
-            BRA         write_next
-sta_chosen  LEA         start_addr,A6       *start address chosen
-write_next  MOVE.L      (A2)+,(A6)+
-            MOVE.L      (A2)+,(A6)+            
-            MOVEM.L     (SP)+, A0-A6/D0-D7  *Restore the working registers from stack
+exit_io     MOVEM.L     (SP)+, A0-A6/D0-D7  *Restore the working registers from stack
             RTS
             
             
@@ -991,7 +932,8 @@ terminator        DC.B        0                   *Null terminator
 
 
 
+
 *~Font name~Courier New~
-*~Font size~12~
+*~Font size~14~
 *~Tab type~1~
 *~Tab size~4~
