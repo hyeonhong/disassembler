@@ -182,6 +182,10 @@ op_loop     BSR         op_code
             CMPA.L      A0,A4
             BGT         op_loop
 
+            LEA         newline,A1
+            MOVE.B      #13,D0
+            TRAP        #15
+            
             LEA         string8,A1
             MOVE.B      #13,D0
             TRAP        #15
@@ -926,6 +930,7 @@ terminator        DC.B        0                   *Null terminator
 
 
          END         pgm_start           *End of program and load address
+
 
 
 
