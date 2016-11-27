@@ -182,6 +182,10 @@ op_loop     BSR         op_code
             CMPA.L      A0,A4
             BGT         op_loop
 
+            LEA         string8,A1
+            MOVE.B      #13,D0
+            TRAP        #15
+
             MOVE.B      #9,D0               *halt console simulator
             TRAP        #15
             STOP        #$2700
@@ -878,13 +882,14 @@ null     DC.B    0                                 *Null terminator
 
 
 string1     DC.W    'Enter the start address in Hex: ',0
-string2     DC.B    'Enter the end address in Hex: ',0
-string3     DC.B    'Length is too long. ',0
-string4     DC.B    'Invalid character detected. Only hexadecimal characters are allowed.',0
-string5     DC.B    'Memory out of range. The correct memory range is 0 - FFFFFF (16MB) ',0
-string6     DC.B    'Address modified to enforce the even address boundary.',0
-string7     DC.B    'Illegal address. End address should be greater or equal to the start address.',0
-newline     DC.B    '',0
+string2     DC.W    'Enter the end address in Hex: ',0
+string3     DC.W    'Length is too long. ',0
+string4     DC.W    'Invalid character detected. Only hexadecimal characters are allowed.',0
+string5     DC.W    'Memory out of range. The correct memory range is 0 - FFFFFF (16MB) ',0
+string6     DC.W    'Address modified to enforce the even address boundary.',0
+string7     DC.W    'Illegal address. End address should be greater or equal to the start address.',0
+string8     DC.W    'The memory range has been disassembled successfuly.',0
+newline     DC.W    '',0
 
 reader      DS.L    100
 reader2     DS.L    100
@@ -921,6 +926,7 @@ terminator        DC.B        0                   *Null terminator
 
 
          END         pgm_start           *End of program and load address
+
 
 
 
