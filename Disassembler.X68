@@ -906,7 +906,7 @@ string5     DC.W    'Memory is out of range. The correct memory range is 0 - FFF
 string6     DC.W    'Address has been modified to enforce the even address boundary.',0
 string7     DC.W    'Illegal address. End address should be greater or equal to the start address.',0
 string8     DC.W    'The memory range has been disassembled successfuly.',0
-string9     DC.W    'Press any key and hit enter to continue. (Press <q> and hit enter to quit): ',0
+string9     DC.W    'Press any key to continue. (Press <q> to quit): ',0
 newline     DC.W    '',0
 
 reader      DS.L    100
@@ -944,6 +944,7 @@ terminator        DC.B        0                   *Null terminator
 
 
          END         pgm_start           *End of program and load address
+
 
 
 
