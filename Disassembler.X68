@@ -136,23 +136,16 @@ numbers_l\@ ADDI.B      #$30,D6
 
 
 pgm_start   EQU         $1000               *Program runs here
-*start_addr  EQU         $00020000           *First address to look up
-*end_addr    EQU         $0003FFFF           *Last address to look up
 stack       EQU         $A0000              *Put stack here
 
         
             ORG         pgm_start           *Program Origin
-*           LEA         pointer_to_mem,A0   *Set up A0 as the pointer to the memory to decode
-*           LEA         pointer_to_buf,A1   *Set up A1 as the pointer to the buffer memory
-*            LEA         start_addr,A0
-*            LEA         buffer,A1
-*            LEA         terminator,A4
             LEA         stack, SP           *Initialize the stack pointer
             LEA         which_add,A5
             
 
 
-            MOVE.B      #0,(A5)             *taking user input for start address
+beginning   MOVE.B      #0,(A5)             *taking user input for start address
             BSR         io_code
             MOVE.B      #1,(A5)             *taking user input for end address
             BSR         io_code
@@ -171,7 +164,7 @@ stack       EQU         $A0000              *Put stack here
             MOVEA.L     D0,A6
             LEA         (A6),A4             *A4 - end address
 
-            LEA         buffer,A1
+            LEA         buffer,A1           *A1 - pointer to the buffer
 
 op_loop     BSR         op_code
             *print to console
@@ -190,7 +183,27 @@ op_loop     BSR         op_code
             MOVE.B      #13,D0
             TRAP        #15
 
-            MOVE.B      #9,D0               *halt console simulator
+            LEA         newline,A1
+            MOVE.B      #13,D0
+            TRAP        #15
+            
+            LEA         string9,A1
+            MOVE.B      #14,D0
+            TRAP        #15
+            
+            LEA         reader,A1
+            MOVE.B      #2,D0
+            TRAP        #15
+            
+            CMPI.W      #1,D1
+            BNE         beginning
+            MOVE.B      (A1),D7
+            CMPI.B      #$71,D7
+            BEQ         the_end
+            CMPI.B      #$51,D7
+            BNE         beginning            
+
+the_end     MOVE.B      #9,D0               *halt console simulator
             TRAP        #15
             STOP        #$2700
 
@@ -885,14 +898,15 @@ null     DC.B    0                                 *Null terminator
 
 
 
-string1     DC.W    'Enter the start address in Hex: ',0
-string2     DC.W    'Enter the end address in Hex: ',0
-string3     DC.W    'Length is too long. ',0
+string1     DC.W    'Enter the starting address in Hex: ',0
+string2     DC.W    'Enter the ending address in Hex: ',0
+string3     DC.W    'Length is too long. Maximum allowed number of characters are 8',0
 string4     DC.W    'Invalid character detected. Only hexadecimal characters are allowed.',0
-string5     DC.W    'Memory out of range. The correct memory range is 0 - FFFFFF (16MB) ',0
-string6     DC.W    'Address modified to enforce the even address boundary.',0
+string5     DC.W    'Memory is out of range. The correct memory range is 0 - FFFFFF (16MB) ',0
+string6     DC.W    'Address has been modified to enforce the even address boundary.',0
 string7     DC.W    'Illegal address. End address should be greater or equal to the start address.',0
 string8     DC.W    'The memory range has been disassembled successfuly.',0
+string9     DC.W    'Press any key and hit enter to continue. (Press <q> and hit enter to quit): ',0
 newline     DC.W    '',0
 
 reader      DS.L    100
@@ -930,6 +944,7 @@ terminator        DC.B        0                   *Null terminator
 
 
          END         pgm_start           *End of program and load address
+
 
 
 
