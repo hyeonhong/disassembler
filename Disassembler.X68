@@ -132,6 +132,31 @@ numbers_l\@ ADDI.B      #$30,D6
             ENDM
 
 
+parsing_1   MACRO
+            MOVE.B      (A0)+,D0
+            MOVE.B      D0,D1               *D1 - register #
+            MOVE.B      D0,D5               *D5 - mode
+            ANDI.B      #%00111000,D5
+            LSR.B       #3,D5
+            ANDI.B      #%00000111,D1
+            MOVE.B      D5,D3               *D3 - back-up
+            MOVE.B      D1,D4               *D4 - back-up
+            ADDA.W      (A2),A0             *add exception flag value to the memory pointer
+            ENDM
+            
+parsing_2   MACRO
+            MOVE.W      D0,D1
+            ANDI.W      #%0000111000000000,D1
+            LSR.B       #9,D1
+            MOVE.W      D0,D2
+            ANDI.W      #%0000000111000000,D2
+            LSR.B       #6,D2
+            MOVE.W      D0,D3
+            ANDI.W      #%0000000000111000,D3
+            LSR.B       #3,D3
+            MOVE.W      D0,D4
+            ANDI.W      #%0000000000000111,D4
+            ENDM
 
 
 
@@ -796,34 +821,6 @@ exit_op     MOVE.W      #$0000,(A1)+        *write '0'(null) of ascii-hex into t
 
 
 
-
-parsing_1   MACRO
-            MOVE.B      (A0)+,D0
-            MOVE.B      D0,D1               *D1 - register #
-            MOVE.B      D0,D5               *D5 - mode
-            ANDI.B      #%00111000,D5
-            LSR.B       #3,D5
-            ANDI.B      #%00000111,D1
-            MOVE.B      D5,D3               *D3 - back-up
-            MOVE.B      D1,D4               *D4 - back-up
-            ADDA.W      (A2),A0             *add exception flag value to the memory pointer
-            ENDM
-            
-
-parsing_2   MOVE.W      D0,D1
-            ANDI.W      #%0000111000000000,D1
-            LSR.B       #9,D1
-            MOVE.W      D0,D2
-            ANDI.W      #%0000000111000000,D2
-            LSR.B       #6,D2
-            MOVE.W      D0,D3
-            ANDI.W      #%0000000000111000,D3
-            LSR.B       #3,D3
-            MOVE.W      D0,D4
-            ANDI.W      #%0000000000000111,D4
-            ENDM
-
-
 e_a         MOVEM.L     A2-A6/D0-D7,-(SP)
             LEA         exception,A2
             MOVE.W      (A2),D2
@@ -1222,6 +1219,7 @@ terminator        DC.B        0                   *Null terminator
 
 
          END         pgm_start           *End of program and load address
+
 
 
 
