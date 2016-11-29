@@ -1197,7 +1197,7 @@ buffer      DS.W        100                  *Print buffer
 
 exception   DS.W        1
 imme_flag   DS.W        1
-move_flag   DS.W        1
+move_flag   DC.W        0
 
 
 
@@ -1220,6 +1220,7 @@ terminator        DC.B        0                   *Null terminator
 
 
          END         pgm_start           *End of program and load address
+
 
 
 
