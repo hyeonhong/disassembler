@@ -147,7 +147,8 @@ parsing_1   MACRO
 parsing_2   MACRO
             MOVE.W      D0,D1
             ANDI.W      #%0000111000000000,D1
-            LSR.B       #9,D1
+            LSR.B       #8,D1
+            LSR.B       #1,D1
             MOVE.W      D0,D2
             ANDI.W      #%0000000111000000,D2
             LSR.B       #6,D2
@@ -896,9 +897,9 @@ ea2b_5      CMPI.W      #%101,D5
             ANDI.W      #$8000,D6
             CMPI.W      #0,D6
             BEQ         no_signbit1
-            MOVE.B      #$2D24,(A1)+          *write the ascii-hex value of '-$' into the buffer
+            MOVE.W      #$2D24,(A1)+          *write the ascii-hex value of '-$' into the buffer
             BRA         numberbit1
-no_signbit1 MOVE.B      #$2B24,(A1)+          *write the ascii-hex value of '+$' into the buffer
+no_signbit1 MOVE.W      #$2B24,(A1)+          *write the ascii-hex value of '+$' into the buffer
 numberbit1  MOVE.W      D7,D6
             ANDI.W      #$7FFF,D6
             add2ascii
@@ -921,9 +922,9 @@ ea2b_6      CMPI.W      #%110,D5
             ANDI.W      #$0080,D6
             CMPI.W      #0,D6
             BEQ         no_signbit2
-            MOVE.B      #$2D24,(A1)+          *write the ascii-hex value of '-$' into the buffer
+            MOVE.W      #$2D24,(A1)+          *write the ascii-hex value of '-$' into the buffer
             BRA         numberbit2
-no_signbit2 MOVE.B      #$2B24,(A1)+          *write the ascii-hex value of '+$' into the buffer
+no_signbit2 MOVE.W      #$2B24,(A1)+          *write the ascii-hex value of '+$' into the buffer
 numberbit2  MOVE.W      D7,D6
             ANDI.W      #$007F,D6
             add2ascii
@@ -999,9 +1000,9 @@ ea2b_7_3    CMPI.B      #%010,D1
             ANDI.W      #$8000,D6
             CMPI.W      #0,D6
             BEQ         no_signbit3
-            MOVE.B      #$2D24,(A1)+          *write the ascii-hex value of '-$' into the buffer
+            MOVE.W      #$2D24,(A1)+          *write the ascii-hex value of '-$' into the buffer
             BRA         numberbit3
-no_signbit3 MOVE.B      #$2B24,(A1)+          *write the ascii-hex value of '+$' into the buffer
+no_signbit3 MOVE.W      #$2B24,(A1)+          *write the ascii-hex value of '+$' into the buffer
 numberbit3  MOVE.W      D7,D6
             ANDI.W      #$7FFF,D6
             add2ascii
@@ -1020,9 +1021,9 @@ ea2b_7_4    MOVE.B      #$28,(A1)+          *write the ascii-hex value of '(' in
             ANDI.W      #$0080,D6
             CMPI.W      #0,D6
             BEQ         no_signbit4
-            MOVE.B      #$2D24,(A1)+          *write the ascii-hex value of '-$' into the buffer
+            MOVE.W      #$2D24,(A1)+          *write the ascii-hex value of '-$' into the buffer
             BRA         numberbit4
-no_signbit4 MOVE.B      #$2B24,(A1)+          *write the ascii-hex value of '+$' into the buffer
+no_signbit4 MOVE.W      #$2B24,(A1)+          *write the ascii-hex value of '+$' into the buffer
 numberbit4  MOVE.W      D7,D6
             ANDI.W      #$007F,D6
             add2ascii
@@ -1219,6 +1220,7 @@ terminator        DC.B        0                   *Null terminator
 
 
          END         pgm_start           *End of program and load address
+
 
 
 
