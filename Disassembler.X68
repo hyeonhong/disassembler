@@ -141,7 +141,7 @@ parsing_1   MACRO
             ANDI.B      #%00000111,D1
             MOVE.B      D5,D3               *D3 - back-up
             MOVE.B      D1,D4               *D4 - back-up
-            ADDA.W      (A2),A0             *add exception flag value to the memory pointer
+            ADDA.W      (A2),A0             *add jump_flag flag value to the memory pointer
             ENDM
             
 parsing_2   MACRO
@@ -364,7 +364,7 @@ illegal     LEA         string7,A1
 op_code     MOVEM.L     A2-A6/D0-D7,-(SP)   *Save the working registers on stack
             LEA         case_1,A6           *Set up A6 as the pointer to the instruction table
             LEA         case_2,A5
-            LEA         exception,A4
+            LEA         jump_flag,A4
             MOVE.L      #$20202020,(A1)+    *write '    ' of ascii-hex into the buffer
             MOVE.L      A0,D0
             MOVE.L      D0,D6               *D6 holds the original hex-value and will be used in the below MACRO
@@ -457,7 +457,7 @@ skip_imme_1 CMPI.W      #$0000,D2
             * 0000 case - <ea>
             MOVEA.L     A2,A0               *Restore to the end point of memory instruction
             SUBA.L      #1,A0               *move back 1 byte the pointer to memory to decode
-            MOVE.W      #$0000,(A4)         *exception - 0000
+            MOVE.W      #$0000,(A4)         *jump_flag - 0000
             JSR         e_a
             BRA         exit_op
             
@@ -471,7 +471,7 @@ next_3_1    CMPI.W      #$0001,D2
             MOVE.W      #$2C20,(A1)+        *write ',' and ' ' (space) of ascii-hex into the buffer            
             MOVEA.L     A2,A0               *Restore to the end point of memory instruction
             SUBA.L      #1,A0               *move back 1 byte the pointer to memory to decode
-            MOVE.W      #$0002,(A4)         *exception - 0002
+            MOVE.W      #$0002,(A4)         *jump_flag - 0002
             JSR         e_a
             BRA         exit_op
 
@@ -484,7 +484,7 @@ next_3_2    CMPI.W      #$0002,D2
             MOVE.W      #$2C20,(A1)+        *write ',' and ' ' (space) of ascii-hex into the buffer
             MOVEA.L     A2,A0               *Restore to the end point of memory instruction
             SUBA.L      #1,A0               *move back 1 byte the pointer to memory to decode
-            MOVE.W      #$0002,(A4)         *exception - 0002
+            MOVE.W      #$0002,(A4)         *jump_flag - 0002
             JSR         e_a
             BRA         exit_op
 
@@ -497,7 +497,7 @@ next_3_3    CMPI.W      #$0003,D2
             MOVE.W      #$2C20,(A1)+        *write ',' and ' ' (space) of ascii-hex into the buffer
             MOVEA.L     A2,A0               *Restore to the end point of memory instruction
             SUBA.L      #1,A0               *move back 1 byte the pointer to memory to decode
-            MOVE.W      #$0004,(A4)         *exception - 0004
+            MOVE.W      #$0004,(A4)         *jump_flag - 0004
             JSR         e_a
             BRA         exit_op
 
@@ -539,7 +539,7 @@ r_mask_next ROR.W       #1,D6
             MOVE.W      #$2C20,(A1)+        *write ',' and ' ' (space) of ascii-hex into the buffer
             MOVEA.L     A2,A0               *Restore to the end point of memory instruction
             SUBA.L      #1,A0               *move back 1 byte the pointer to memory to decode
-            MOVE.W      #$0002,(A4)         *exception - 0002
+            MOVE.W      #$0002,(A4)         *jump_flag - 0002
             JSR         e_a
             BRA         exit_op
 
@@ -569,7 +569,7 @@ mask_next_1 ROL.W       #1,D6
             MOVE.W      #$2C20,(A1)+        *write ',' and ' ' (space) of ascii-hex into the buffer
             MOVEA.L     A2,A0               *Restore to the end point of memory instruction
             SUBA.L      #1,A0               *move back 1 byte the pointer to memory to decode
-            MOVE.W      #$0002,(A4)         *exception - 0002
+            MOVE.W      #$0002,(A4)         *jump_flag - 0002
             JSR         e_a
             BRA         exit_op
 
@@ -577,7 +577,7 @@ mask_next_1 ROL.W       #1,D6
             * 0005 case - <ea>, <register list>
 next_3_5    MOVEA.L     A2,A0               *Restore to the end point of memory instruction
             SUBA.L      #1,A0               *move back 1 byte the pointer to memory to decode
-            MOVE.W      #$0002,(A4)         *exception - 0002
+            MOVE.W      #$0002,(A4)         *jump_flag - 0002
             JSR         e_a
             MOVEA.L     A0,A3               *Save A0 to A3 as a back-up (which is the starting point for next instruction)
             MOVE.W      #$2C20,(A1)+        *write ',' and ' ' (space) of ascii-hex into the buffer
@@ -628,7 +628,7 @@ skip_imme_2 CMPI.W      #$0000,D2
             * 0000 case - <ea>, Dn
             MOVEA.L     A2,A0               *Restore to the end point of memory instruction
             SUBA.L      #1,A0               *move back 1 byte the pointer to memory to decode
-            MOVE.W      #$0000,(A4)         *exception - 0000
+            MOVE.W      #$0000,(A4)         *jump_flag - 0000
             JSR         e_a
             MOVE.W      #$2C20,(A1)+        *write ',' and ' ' (space) of ascii-hex into the buffer
             xreg2ascii
@@ -641,14 +641,14 @@ next_4_1    CMPI.W      #$0001,D2
             MOVE.W      #$2C20,(A1)+        *write ',' and ' ' (space) of ascii-hex into the buffer
             MOVEA.L     A2,A0               *Restore to the end point of memory instruction
             SUBA.L      #1,A0               *move back 1 byte the pointer to memory to decode
-            MOVE.W      #$0000,(A4)         *exception - 0000
+            MOVE.W      #$0000,(A4)         *jump_flag - 0000
             JSR         e_a                 *call e_a subroutine to fill the e.a. into the buffer
             BRA         exit_op
             
             * 0002 case - <ea>, An
 next_4_2    MOVEA.L     A2,A0               *Restore to the end point of memory instruction
             SUBA.L      #1,A0               *move back 1 byte the pointer to memory to decode
-            MOVE.W      #$0000,(A4)         *exception - 0000
+            MOVE.W      #$0000,(A4)         *jump_flag - 0000
             JSR         e_a
             MOVE.W      #$2C20,(A1)+        *write ',' and ' ' (space) of ascii-hex into the buffer
             MOVE.B      #$41,(A1)+          *write the ascii-hex value of 'A' into the buffer            
@@ -789,7 +789,7 @@ skip_imme_5 CMPI.W      #$0000,D2
             * 0000 case - (.B)
             MOVEA.L     A2,A0               *Restore to the end point of memory instruction
             SUBA.L      #2,A0               *move back 2 byte the pointer to memory to decode
-            MOVE.W      #$0005,(A4)         *exception - 0005
+            MOVE.W      #$0005,(A4)         *jump_flag - 0005
             JSR         e_a
             BRA         exit_op
 
@@ -798,14 +798,14 @@ next_7_1    CMPI.W      #$0001,D2
             * 0001 case - (.W)
             MOVEA.L     A2,A0               *Restore to the end point of memory instruction
             SUBA.L      #2,A0               *move back 2 byte the pointer to memory to decode
-            MOVE.W      #$0006,(A4)         *exception - 0006
+            MOVE.W      #$0006,(A4)         *jump_flag - 0006
             JSR         e_a
             BRA         exit_op
             
             * 0002 case - (.L)
 next_7_2    MOVEA.L     A2,A0               *Restore to the end point of memory instruction
             SUBA.L      #2,A0               *move back 2 byte the pointer to memory to decode
-            MOVE.W      #$0007,(A4)         *exception - 0007
+            MOVE.W      #$0007,(A4)         *jump_flag - 0007
             JSR         e_a
             BRA         exit_op
 
@@ -823,7 +823,7 @@ exit_op     MOVE.W      #$0000,(A1)+        *write '0'(null) of ascii-hex into t
 
 
 e_a         MOVEM.L     A2-A6/D0-D7,-(SP)
-            LEA         exception,A2
+            LEA         jump_flag,A2
             MOVE.W      (A2),D2
 
             CMPI.W      #4,D2               *is it MOVE instruction or not?
@@ -1195,7 +1195,7 @@ which_add   DS.L    1
 
 buffer      DS.W        100                  *Print buffer
 
-exception   DC.W        0
+jump_flag   DC.W        0
 imme_flag   DC.W        0
 move_flag   DC.W        0
 
@@ -1220,6 +1220,7 @@ terminator        DC.B        0                   *Null terminator
 
 
          END         pgm_start           *End of program and load address
+
 
 
 
