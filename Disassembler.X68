@@ -1167,7 +1167,7 @@ case_6	DC.W		$C140,'EXG     ',$0002,$0000
 		DC.W		$E1B8,'ROL.L   ',$0001,$0000
 case_7	DC.W		$1000,'MOVE.B  ',$0000,$0000
 		DC.W		$3000,'MOVE.W  ',$0001,$0000
-		DC.W		$2000,'MOVE.L  ',$0002,$0000
+		DC.W		$2000,'MOVE.L  ',$0002,$0001
 
 null     DC.B    0                                 *Null terminator
 
@@ -1220,6 +1220,7 @@ terminator        DC.B        0                   *Null terminator
 
 
          END         pgm_start           *End of program and load address
+
 
 
 
