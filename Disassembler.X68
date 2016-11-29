@@ -1195,8 +1195,8 @@ which_add   DS.L    1
 
 buffer      DS.W        100                  *Print buffer
 
-exception   DS.W        1
-imme_flag   DS.W        1
+exception   DC.W        0
+imme_flag   DC.W        0
 move_flag   DC.W        0
 
 
@@ -1220,6 +1220,7 @@ terminator        DC.B        0                   *Null terminator
 
 
          END         pgm_start           *End of program and load address
+
 
 
 
