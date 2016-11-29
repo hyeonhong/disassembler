@@ -147,14 +147,14 @@ parsing_1   MACRO
 parsing_2   MACRO
             MOVE.W      D0,D1
             ANDI.W      #%0000111000000000,D1
-            LSR.B       #8,D1
-            LSR.B       #1,D1
+            LSR.W       #8,D1
+            LSR.W       #1,D1
             MOVE.W      D0,D2
             ANDI.W      #%0000000111000000,D2
-            LSR.B       #6,D2
+            LSR.W       #6,D2
             MOVE.W      D0,D3
             ANDI.W      #%0000000000111000,D3
-            LSR.B       #3,D3
+            LSR.W       #3,D3
             MOVE.W      D0,D4
             ANDI.W      #%0000000000000111,D4
             ENDM
@@ -1220,6 +1220,7 @@ terminator        DC.B        0                   *Null terminator
 
 
          END         pgm_start           *End of program and load address
+
 
 
 
