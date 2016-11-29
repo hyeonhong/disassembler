@@ -1,5 +1,5 @@
 *----------------------------------------------------------------------------------------------------
-* Title      : I/O & Op-Code
+* Title      : I/O & Op-Code & EA
 * Written by : Hyeon Hong
 * Date       : 12/14/2016
 * Description: -------------------------------------------------------------------------------k
@@ -353,20 +353,20 @@ op_code     MOVEM.L     A2-A6/D0-D7,-(SP)   *Save the working registers on stack
             MOVE.W      (A0)+,D0
 loop_1      CMP.W       (A6),D0
             BEQ         to_buffer_1
-            ADDA.L      #12,A6              *Move to next row
+            ADDA.L      #14,A6              *Move to next row
             CMPA.L      A5,A6
             BNE         loop_1
 loop_2      MOVE.W      D0,D1               *To modify the value, copy D0 to D1
             ANDI.W      #%1111111111111000,D1
             CMP.W       (A6),D1
             BEQ         to_buffer_2
-            ADDA.L      #12,A6              *Move to next row
+            ADDA.L      #14,A6              *Move to next row
 loop_3      LEA         case_4,A5
             MOVE.W      D0,D1
             ANDI.W      #%1111111111000000,D1
             CMP.W       (A6),D1
             BEQ         to_buffer_3
-            ADDA.L      #12,A6              *Move to next row
+            ADDA.L      #14,A6              *Move to next row
             CMPA.L      A5,A6
             BNE         loop_3
 loop_4      LEA         case_5,A5
@@ -374,20 +374,20 @@ loop_4      LEA         case_5,A5
             ANDI.W      #%1111000111000000,D1
             CMP.W       (A6),D1
             BEQ         to_buffer_4
-            ADDA.L      #12,A6              *Move to next row
+            ADDA.L      #14,A6              *Move to next row
             CMPA.L      A5,A6
             BNE         loop_4            
 loop_5      MOVE.W      D0,D1
             ANDI.W      #%1111111100000000,D1
             CMP.W       (A6),D1
             BEQ         to_buffer_5
-            ADDA.L      #12,A6              *Move to next row
+            ADDA.L      #14,A6              *Move to next row
 loop_6      LEA         case_7,A5
             MOVE.W      D0,D1
             ANDI.W      #%1111000111111000,D1
             CMP.W       (A6),D1
             BEQ         to_buffer_6
-            ADDA.L      #12,A6              *Move to next row
+            ADDA.L      #14,A6              *Move to next row
             CMPA.L      A5,A6
             BNE         loop_6
 loop_7      LEA         null,A5
@@ -395,7 +395,7 @@ loop_7      LEA         null,A5
             ANDI.W      #%1111000000000000,D1
             CMP.W       (A6),D1
             BEQ         to_buffer_7
-            ADDA.L      #12,A6              *Move to next row
+            ADDA.L      #14,A6              *Move to next row
             CMPA.L      A5,A6
             BNE         loop_7
             MOVE.L      #$44415441,(A1)+    *write 'DATA' of ascii-hex into the buffer
@@ -420,8 +420,13 @@ to_buffer_3 ADDA.L      #2,A6               *Move 1 column to the right
             MOVEA.L     A0,A2               *Save A0 to A2 as a back-up
             MOVE.L      (A6)+,(A1)+         *Write two long words that contain ascii values to the buffer
             MOVE.L      (A6)+,(A1)+
-            MOVE.W      (A6),D2             *D2 holds the syntax pattern number           
-            CMPI.W      #$0000,D2
+            MOVE.W      (A6)+,D2            *D2 holds the syntax pattern number
+            MOVE.W      (A6),D3             *D3 temporarily holds the imme_flag value
+            CMPI.W      #0,D3
+            BEQ         skip_imme_1
+            LEA         imme_flag,A3
+            MOVE.W      D3,(A3)
+skip_imme_1 CMPI.W      #$0000,D2
             BNE         next_3_1
             * 0000 case - <ea>
             MOVEA.L     A2,A0               *Restore to the end point of memory instruction
@@ -466,7 +471,7 @@ next_3_3    CMPI.W      #$0003,D2
             MOVE.W      #$2C20,(A1)+        *write ',' and ' ' (space) of ascii-hex into the buffer
             MOVEA.L     A2,A0               *Restore to the end point of memory instruction
             SUBA.L      #1,A0               *move back 1 byte the pointer to memory to decode
-            MOVE.W      #$0003,(A4)         *exception - 0003
+            MOVE.W      #$0004,(A4)         *exception - 0004
             JSR         e_a
             BRA         exit_op
 
@@ -586,8 +591,13 @@ to_buffer_4 ADDA.L      #2,A6               *Move 1 column to the right
             MOVEA.L     A0,A2               *Save A0 to A2 as a back-up
             MOVE.L      (A6)+,(A1)+         *Write two long words that contain ascii values to the buffer
             MOVE.L      (A6)+,(A1)+
-            MOVE.W      (A6),D2             *D2 holds the syntax pattern number           
-            CMPI.W      #$0000,D2
+            MOVE.W      (A6)+,D2            *D2 holds the syntax pattern number
+            MOVE.W      (A6),D3             *D3 temporarily holds the imme_flag value
+            CMPI.W      #0,D3
+            BEQ         skip_imme_2
+            LEA         imme_flag,A3
+            MOVE.W      D3,(A3)
+skip_imme_2 CMPI.W      #$0000,D2
             BNE         next_4_1
             * 0000 case - <ea>, Dn
             MOVEA.L     A2,A0               *Restore to the end point of memory instruction
@@ -624,8 +634,13 @@ to_buffer_5 ADDA.L      #2,A6               *Move 1 column to the right
             MOVEA.L     A0,A2               *Save A0 to A2 as a back-up
             MOVE.L      (A6)+,(A1)+         *Write two long words that contain ascii values to the buffer
             MOVE.L      (A6)+,(A1)+
-            MOVE.B      D0,D2               *D2 holds the syntax pattern number
-            CLR.L       D3
+            MOVE.W      (A6)+,D2            *D2 holds the syntax pattern number
+            MOVE.W      (A6),D3             *D3 temporarily holds the imme_flag value
+            CMPI.W      #0,D3
+            BEQ         skip_imme_3
+            LEA         imme_flag,A3
+            MOVE.W      D3,(A3)
+skip_imme_3 CLR.L       D3
             CMPI.B      #$FF,D2
             BNE         next_5_1
             * #$FF case - 32 bit displacement
@@ -671,8 +686,13 @@ to_buffer_6 ADDA.L      #2,A6               *Move 1 column to the right
             MOVEA.L     A0,A2               *Save A0 to A2 as a back-up
             MOVE.L      (A6)+,(A1)+         *Write two long words that contain ascii values to the buffer
             MOVE.L      (A6)+,(A1)+
-            MOVE.W      (A6),D2             *D2 holds the syntax pattern number           
-            CMPI.W      #$0000,D2
+            MOVE.W      (A6)+,D2            *D2 holds the syntax pattern number
+            MOVE.W      (A6),D3             *D3 temporarily holds the imme_flag value
+            CMPI.W      #0,D3
+            BEQ         skip_imme_4
+            LEA         imme_flag,A3
+            MOVE.W      D3,(A3)
+skip_imme_4 CMPI.W      #$0000,D2
             BNE         next_6_1
             * 0000 case - (I) # <decimal>, Dy
             MOVE.B      #$23,(A1)+        *write '#' of ascii-hex into the buffer
@@ -732,13 +752,18 @@ to_buffer_7 ADDA.L      #2,A6               *Move 1 column to the right
             MOVEA.L     A0,A2               *Save A0 to A2 as a back-up
             MOVE.L      (A6)+,(A1)+         *Write two long words that contain ascii values to the buffer
             MOVE.L      (A6)+,(A1)+
-            MOVE.W      (A6),D2             *D2 holds the syntax pattern number           
-            CMPI.W      #$0000,D2
+            MOVE.W      (A6)+,D2            *D2 holds the syntax pattern number
+            MOVE.W      (A6),D3             *D3 temporarily holds the imme_flag value
+            CMPI.W      #0,D3
+            BEQ         skip_imme_5
+            LEA         imme_flag,A3
+            MOVE.W      D3,(A3)
+skip_imme_5 CMPI.W      #$0000,D2
             BNE         next_7_1
             * 0000 case - (.B)
             MOVEA.L     A2,A0               *Restore to the end point of memory instruction
             SUBA.L      #2,A0               *move back 2 byte the pointer to memory to decode
-            MOVE.W      #$0004,(A4)         *exception - 0004
+            MOVE.W      #$0005,(A4)         *exception - 0005
             JSR         e_a
             BRA         exit_op
 
@@ -747,14 +772,14 @@ next_7_1    CMPI.W      #$0001,D2
             * 0001 case - (.W)
             MOVEA.L     A2,A0               *Restore to the end point of memory instruction
             SUBA.L      #2,A0               *move back 2 byte the pointer to memory to decode
-            MOVE.W      #$0005,(A4)         *exception - 0005
+            MOVE.W      #$0006,(A4)         *exception - 0006
             JSR         e_a
             BRA         exit_op
             
             * 0002 case - (.L)
 next_7_2    MOVEA.L     A2,A0               *Restore to the end point of memory instruction
             SUBA.L      #2,A0               *move back 2 byte the pointer to memory to decode
-            MOVE.W      #$0006,(A4)         *exception - 0006
+            MOVE.W      #$0007,(A4)         *exception - 0007
             JSR         e_a
             BRA         exit_op
 
@@ -767,6 +792,11 @@ exit_op     MOVE.W      #$0000,(A1)+        *write '0'(null) of ascii-hex into t
 
 
 ***************************************************************************************************
+* Subroutine EA
+
+
+
+
 parsing_1   MACRO
             MOVE.B      (A0)+,D0
             MOVE.B      D0,D1
@@ -775,7 +805,7 @@ parsing_1   MACRO
             ANDI.B      #%00000111,D1
             MOVE.B      D0,D3               *D3 - back-up
             MOVE.B      D1,D4               *D4 - back-up
-            ADDA.W      (A2),A0                **** IF (==0000,0002,0003)->NO ADD, ADD 2,4 -> FIX (3->4) in exception
+            ADDA.W      (A2),A0             *add exception flag value to the memory pointer
             ENDM
             
 parsing_2   MACRO
@@ -802,7 +832,7 @@ e_a         MOVEM.L     A2-A6/D0-D7,-(SP)
             BNE         ea_2
             *0000 case
             parsing_1            
-            BRA         ea2buffer_1
+            BRA         ea2buffer
 ea_0_done            
             MOVE.W      #$4541,(A1)+        *write 'EA' of ascii-hex into the buffer
 *            ADDA.L      #1,A0               *advance the memory pointer by 1 byte
@@ -823,43 +853,43 @@ ea_4        CMPI.W      #$0003,D2
 ea_exit     MOVEM.L     (SP)+, A2-A6/D0-D7
             RTS
 
-ea2buffer_1 CMPI.W      #%000,D0
-            BNE         ea2b_1_1
+ea2buffer   CMPI.W      #%000,D0
+            BNE         ea2b_1
             MOVE.B      #$44,(A1)+          *write the ascii-hex value of 'D' into the buffer
             ADDI.B      #$30,D1
             MOVE.B      D1,(A1)+            *write the ascii-hex value of '0~7' into the buffer
             BRA         where???
-ea2b_1_1    CMPI.W      #%001,D0
-            BNE         ea2b_1_2
+ea2b_1      CMPI.W      #%001,D0
+            BNE         ea2b_2
             MOVE.B      #$41,(A1)+          *write the ascii-hex value of 'A' into the buffer
             ADDI.B      #$30,D1
             MOVE.B      D1,(A1)+            *write the ascii-hex value of '0~7' into the buffer
             BRA         where???
-ea2b_1_2    CMPI.W      #%010,D0
-            BNE         ea2b_1_3            
+ea2b_2      CMPI.W      #%010,D0
+            BNE         ea2b_3            
             MOVE.W      #$2841,(A1)+        *write the ascii-hex value of '(' and 'A' into the buffer
             ADDI.B      #$30,D1
             MOVE.B      D1,(A1)+            *write the ascii-hex value of '0~7' into the buffer            
             MOVE.B      #$29,(A1)+          *write the ascii-hex value of ')' into the buffer
             BRA         where???
-ea2b_1_3    CMPI.W      #%011,D0
-            BNE         ea2b_1_4            
+ea2b_3      CMPI.W      #%011,D0
+            BNE         ea2b_4            
             MOVE.W      #$2841,(A1)+        *write the ascii-hex value of '(' and 'A' into the buffer
             ADDI.B      #$30,D1
             MOVE.B      D1,(A1)+            *write the ascii-hex value of '0~7' into the buffer            
             MOVE.B      #$29,(A1)+          *write the ascii-hex value of ')' into the buffer
             MOVE.W      #$2B20,(A1)+        *write the ascii-hex value of '+' and ' ' into the buffer
             BRA         where???
-ea2b_1_4    CMPI.W      #%100,D0
-            BNE         ea2b_1_5
+ea2b_4      CMPI.W      #%100,D0
+            BNE         ea2b_5
             MOVE.W      #$202D,(A1)+        *write the ascii-hex value of ' ' and '-' into the buffer
             MOVE.W      #$2841,(A1)+        *write the ascii-hex value of '(' and 'A' into the buffer
             ADDI.B      #$30,D1
             MOVE.B      D1,(A1)+            *write the ascii-hex value of '0~7' into the buffer            
             MOVE.B      #$29,(A1)+          *write the ascii-hex value of ')' into the buffer
             BRA         where???
-ea2b_1_5    CMPI.W      #%101,D0
-            BNE         ea2b_1_6
+ea2b_5      CMPI.W      #%101,D0
+            BNE         ea2b_6
             MOVE.B      #$28,(A1)+        *write the ascii-hex value of '(' into the buffer
 
             MOVE.W      (A0)+,D7
@@ -883,8 +913,8 @@ numberbit1  MOVE.W      D7,D6
             MOVE.B      #$29,(A1)+          *write the ascii-hex value of ')' into the buffer
             BRA         where???
 
-ea2b_1_6    CMPI.W      #%110,D0
-            BNE         ea2b_1_7
+ea2b_6      CMPI.W      #%110,D0
+            BNE         ea2b_7
 
             MOVE.B      #$28,(A1)+          *write the ascii-hex value of '(' into the buffer
 
@@ -910,11 +940,11 @@ numberbit2  MOVE.W      D7,D6
             MOVE.W      D7,D6
             ANDI.W      #$8000,D6
             CMPI.W      #0,D6
-            BEQ         d_chosen
+            BEQ         d_chosen1
             MOVE.B      #$41,(A1)+        *write the ascii-hex value of 'A' into the buffer
-            BRA         x_number
-d_chosen    MOVE.B      #$44,(A1)+        *write the ascii-hex value of 'D' into the buffer
-x_number    MOVE.B      D3,D1               *Restore the back-up to D1
+            BRA         x_number1
+d_chosen1   MOVE.B      #$44,(A1)+        *write the ascii-hex value of 'D' into the buffer
+x_number1   MOVE.B      D3,D1               *Restore the back-up to D1
             ADDI.B      #$30,D1
             MOVE.B      D1,(A1)+            *write the ascii-hex value of '0~7' into the buffer
         
@@ -923,14 +953,14 @@ x_number    MOVE.B      D3,D1               *Restore the back-up to D1
 
 
             * mode = #%111 & reg = #$000
-ea2b_1_7    CMPI.B      #%000,D1
-            BNE         ea2b_1_7_1
+ea2b_7      CMPI.B      #%000,D1
+            BNE         ea2b_7_1
             MOVE.W      (A0)+,D6
             add2ascii
             BRA         where???
             
-ea2b_1_7_1  CMPI.B      #%001,D1
-            BNE         ea2b_1_7_2
+ea2b_7_1    CMPI.B      #%001,D1
+            BNE         ea2b_7_2
             MOVE.L      (A0)+,D4
             MOVE.L      D4,D6
             LSR.L       #8,D6
@@ -940,13 +970,79 @@ ea2b_1_7_1  CMPI.B      #%001,D1
             add2ascii
             BRA         where???
             
-ea2b_1_7_2  CMPI.B      #%100,D1
-            BNE         ea2b_1_7_3
-            *immi_long flag check
-            
+ea2b_7_2    CMPI.B      #%100,D1
+            BNE         ea2b_7_3
+
+            MOVE.W      #$2324,(A1)+        *write '#$' of ascii-hex into the buffer
+
+            *check if the size for immediate value is Long or Word
+            LEA         imme_flag,A3
+            MOVE.W      (A3),D1
+            CMPI.W      #0,D1
+            BEQ         not_long
+            MOVE.L      (A0)+,D1            *read the immediate value from the memory
+            l_2ascii            
+            BRA         where???
+not_long    MOVE.W      (A0)+,D1            *read the immediate value from the memory
+            w_2ascii
             BRA         where???
             
-ea2b_1_7_3
+ea2b_7_3    CMPI.B      #%010,D1
+            BNE         ea2b_7_4
+            MOVE.B      #$28,(A1)+        *write the ascii-hex value of '(' into the buffer
+
+            MOVE.W      (A0)+,D7
+            
+            MOVE.W      D7,D6
+            ANDI.W      #$8000,D6
+            CMPI.W      #0,D6
+            BEQ         no_signbit3
+            MOVE.B      #$2D24,(A1)+          *write the ascii-hex value of '-$' into the buffer
+            BRA         numberbit3
+no_signbit3 MOVE.B      #$2B24,(A1)+          *write the ascii-hex value of '+$' into the buffer
+numberbit3  MOVE.W      D7,D6
+            ANDI.W      #$7FFF,D6
+            add2ascii
+            MOVE.W      #$2C20,(A1)+        *write ',' and ' ' (space) of ascii-hex into the buffer            
+
+            MOVE.W      #$5043,(A1)+        *write the ascii-hex value of 'PC' into the buffer
+            
+            MOVE.B      #$29,(A1)+          *write the ascii-hex value of ')' into the buffer
+            BRA         where???
+
+            * mode = #%111 & reg = #$011
+ea2b_7_4    MOVE.B      #$28,(A1)+          *write the ascii-hex value of '(' into the buffer
+
+            MOVE.W      (A0)+,D7
+            MOVE.W      D7,D6
+            ANDI.W      #$0080,D6
+            CMPI.W      #0,D6
+            BEQ         no_signbit4
+            MOVE.B      #$2D24,(A1)+          *write the ascii-hex value of '-$' into the buffer
+            BRA         numberbit4
+no_signbit4 MOVE.B      #$2B24,(A1)+          *write the ascii-hex value of '+$' into the buffer
+numberbit4  MOVE.W      D7,D6
+            ANDI.W      #$007F,D6
+            add2ascii
+            MOVE.W      #$2C20,(A1)+        *write ',' and ' ' (space) of ascii-hex into the buffer            
+
+            MOVE.W      #$5043,(A1)+        *write the ascii-hex value of 'PC' into the buffer
+            MOVE.W      #$2C20,(A1)+        *write ',' and ' ' (space) of ascii-hex into the buffer
+            
+            MOVE.W      D7,D6
+            ANDI.W      #$8000,D6
+            CMPI.W      #0,D6
+            BEQ         d_chosen2
+            MOVE.B      #$41,(A1)+        *write the ascii-hex value of 'A' into the buffer
+            BRA         x_number2
+d_chosen2   MOVE.B      #$44,(A1)+        *write the ascii-hex value of 'D' into the buffer
+x_number2   MOVE.B      D3,D1               *Restore the back-up to D1
+            ADDI.B      #$30,D1
+            MOVE.B      D1,(A1)+            *write the ascii-hex value of '0~7' into the buffer
+        
+            MOVE.B      #$29,(A1)+          *write the ascii-hex value of ')' into the buffer
+            BRA         where???
+
 
 
 ***************************************************************************************************
@@ -957,118 +1053,118 @@ ea2b_1_7_3
 
 
 
-case_1	DC.W		$4E71,'NOP     ',$0000
-		DC.W		$4E75,'RTS     ',$0000
-case_2	DC.W		$4840,'SWAP    ',$0000
-case_3	DC.W		$0600,'ADDI.B  ',$0001
-		DC.W		$0640,'ADDI.W  ',$0002
-		DC.W		$0680,'ADDI.L  ',$0003
-		DC.W		$0200,'ANDI.B  ',$0001
-		DC.W		$0240,'ANDI.W  ',$0002
-		DC.W		$0280,'ANDI.L  ',$0003
-		DC.W		$E0C0,'ASR     ',$0000
-		DC.W		$E1C0,'ASL     ',$0000
-		DC.W		$4200,'CLR.B   ',$0000
-		DC.W		$4240,'CLR.W   ',$0000
-		DC.W		$4280,'CLR.L   ',$0000
-		DC.W		$0C00,'CMPI.B  ',$0001
-		DC.W		$0C40,'CMPI.W  ',$0002
-		DC.W		$0C80,'CMPI.L  ',$0003
-		DC.W		$0A00,'EORI.B  ',$0001
-		DC.W		$0A40,'EORI.W  ',$0002
-		DC.W		$0A80,'EORI.L  ',$0003
-		DC.W		$4EC0,'JMP     ',$0000
-		DC.W		$4E80,'JSR     ',$0000
-		DC.W		$E2C0,'LSR     ',$0000
-		DC.W		$E3C0,'LSL     ',$0000
-		DC.W		$4400,'NEG.B   ',$0000
-		DC.W		$4440,'NEG.W   ',$0000
-		DC.W		$4480,'NEG.L   ',$0000
-		DC.W		$4600,'NOT.B   ',$0000
-		DC.W		$4640,'NOT.W   ',$0000
-		DC.W		$4680,'NOT.L   ',$0000
-		DC.W		$0000,'ORI.B   ',$0001
-		DC.W		$0040,'ORI.W   ',$0002
-		DC.W		$0080,'ORI.L   ',$0003
-		DC.W		$E6C0,'ROR     ',$0000
-		DC.W		$E7C0,'ROL     ',$0000
-		DC.W		$0400,'SUBI.B  ',$0001
-		DC.W		$0440,'SUBI.W  ',$0002
-		DC.W		$0480,'SUBI.L  ',$0003
-		DC.W		$4880,'MOVEM.W ',$0004
-		DC.W		$4C80,'MOVEM.W ',$0005
-		DC.W		$48C0,'MOVEM.L ',$0004
-		DC.W		$4CC0,'MOVEM.L ',$0005
-case_4	DC.W		$D000,'ADD.B   ',$0000
-		DC.W		$D100,'ADD.B   ',$0001
-		DC.W		$D040,'ADD.W   ',$0000
-		DC.W		$D140,'ADD.W   ',$0001
-		DC.W		$D080,'ADD.L   ',$0000
-		DC.W		$D180,'ADD.L   ',$0001
-		DC.W		$D0C0,'ADDA.W  ',$0002
-		DC.W		$D1C0,'ADDA.L  ',$0002
-		DC.W		$C000,'AND.B   ',$0000
-		DC.W		$C100,'AND.B   ',$0001
-		DC.W		$C040,'AND.W   ',$0000
-		DC.W		$C140,'AND.W   ',$0001
-		DC.W		$C080,'AND.L   ',$0000
-		DC.W		$C180,'AND.L   ',$0001
-		DC.W		$B000,'CMP.B   ',$0000
-		DC.W		$B040,'CMP.W   ',$0000
-		DC.W		$B080,'CMP.L   ',$0000
-		DC.W		$B0C0,'CMPA.W  ',$0002
-		DC.W		$B1C0,'CMPA.L  ',$0002
-		DC.W		$B100,'EOR.B   ',$0001
-		DC.W		$B140,'EOR.W   ',$0001
-		DC.W		$B180,'EOR.L   ',$0001
-		DC.W		$41C0,'LEA     ',$0002
-		DC.W		$3040,'MOVEA.W ',$0002
-		DC.W		$2040,'MOVEA.L ',$0002
-		DC.W		$8000,'OR.B    ',$0000
-		DC.W		$8100,'OR.B    ',$0001
-		DC.W		$8040,'OR.W    ',$0000
-		DC.W		$8140,'OR.W    ',$0001
-		DC.W		$8080,'OR.L    ',$0000
-		DC.W		$8180,'OR.L    ',$0001
-		DC.W		$9000,'SUB.B   ',$0000
-		DC.W		$9100,'SUB.B   ',$0001
-		DC.W		$9040,'SUB.W   ',$0000
-		DC.W		$9140,'SUB.W   ',$0001
-		DC.W		$9080,'SUB.L   ',$0000
-		DC.W		$9180,'SUB.L   ',$0001
-		DC.W		$90C0,'SUBA.W  ',$0002
-		DC.W		$91C0,'SUBA.L  ',$0002
-case_5	DC.W		$6100,'BSR     ',$0000
-case_6	DC.W		$C140,'EXG     ',$0002
-		DC.W		$C148,'EXG     ',$0003
-		DC.W		$C188,'EXG     ',$0004
-		DC.W		$E008,'LSR.B   ',$0000
-		DC.W		$E028,'LSR.B   ',$0001
-		DC.W		$E048,'LSR.W   ',$0000
-		DC.W		$E068,'LSR.W   ',$0001
-		DC.W		$E088,'LSR.L   ',$0000
-		DC.W		$E0A8,'LSR.L   ',$0001
-		DC.W		$E108,'LSL.B   ',$0000
-		DC.W		$E128,'LSL.B   ',$0001
-		DC.W		$E148,'LSL.W   ',$0000
-		DC.W		$E168,'LSL.W   ',$0001
-		DC.W		$E188,'LSL.L   ',$0000
-		DC.W		$E1A8,'LSL.L   ',$0001
-		DC.W		$E018,'ROR.B   ',$0000
-		DC.W		$E038,'ROR.B   ',$0001
-		DC.W		$E058,'ROR.W   ',$0000
-		DC.W		$E078,'ROR.W   ',$0001
-		DC.W		$E098,'ROR.L   ',$0000
-		DC.W		$E0B8,'ROR.L   ',$0001
-		DC.W		$E118,'ROL.B   ',$0000
-		DC.W		$E138,'ROL.B   ',$0001
-		DC.W		$E158,'ROL.W   ',$0000
-		DC.W		$E178,'ROL.W   ',$0001
-		DC.W		$E198,'ROL.L   ',$0000
-		DC.W		$E1B8,'ROL.L   ',$0001
-case_7	DC.W		$1000,'MOVE.B  ',$0000
-		DC.W		$3000,'MOVE.W  ',$0001
-		DC.W		$2000,'MOVE.L  ',$0002
+case_1	DC.W		$4E71,'NOP     ',$0000,$0000
+		DC.W		$4E75,'RTS     ',$0000,$0000
+case_2	DC.W		$4840,'SWAP    ',$0000,$0000
+case_3	DC.W		$0600,'ADDI.B  ',$0001,$0000
+		DC.W		$0640,'ADDI.W  ',$0002,$0000
+		DC.W		$0680,'ADDI.L  ',$0003,$0000
+		DC.W		$0200,'ANDI.B  ',$0001,$0000
+		DC.W		$0240,'ANDI.W  ',$0002,$0000
+		DC.W		$0280,'ANDI.L  ',$0003,$0000
+		DC.W		$E0C0,'ASR     ',$0000,$0000
+		DC.W		$E1C0,'ASL     ',$0000,$0000
+		DC.W		$4200,'CLR.B   ',$0000,$0000
+		DC.W		$4240,'CLR.W   ',$0000,$0000
+		DC.W		$4280,'CLR.L   ',$0000,$0000
+		DC.W		$0C00,'CMPI.B  ',$0001,$0000
+		DC.W		$0C40,'CMPI.W  ',$0002,$0000
+		DC.W		$0C80,'CMPI.L  ',$0003,$0000
+		DC.W		$0A00,'EORI.B  ',$0001,$0000
+		DC.W		$0A40,'EORI.W  ',$0002,$0000
+		DC.W		$0A80,'EORI.L  ',$0003,$0000
+		DC.W		$4EC0,'JMP     ',$0000,$0000
+		DC.W		$4E80,'JSR     ',$0000,$0000
+		DC.W		$E2C0,'LSR     ',$0000,$0000
+		DC.W		$E3C0,'LSL     ',$0000,$0000
+		DC.W		$4400,'NEG.B   ',$0000,$0000
+		DC.W		$4440,'NEG.W   ',$0000,$0000
+		DC.W		$4480,'NEG.L   ',$0000,$0000
+		DC.W		$4600,'NOT.B   ',$0000,$0000
+		DC.W		$4640,'NOT.W   ',$0000,$0000
+		DC.W		$4680,'NOT.L   ',$0000,$0000
+		DC.W		$0000,'ORI.B   ',$0001,$0000
+		DC.W		$0040,'ORI.W   ',$0002,$0000
+		DC.W		$0080,'ORI.L   ',$0003,$0000
+		DC.W		$E6C0,'ROR     ',$0000,$0000
+		DC.W		$E7C0,'ROL     ',$0000,$0000
+		DC.W		$0400,'SUBI.B  ',$0001,$0000
+		DC.W		$0440,'SUBI.W  ',$0002,$0000
+		DC.W		$0480,'SUBI.L  ',$0003,$0000
+		DC.W		$4880,'MOVEM.W ',$0004,$0000
+		DC.W		$4C80,'MOVEM.W ',$0005,$0000
+		DC.W		$48C0,'MOVEM.L ',$0004,$0000
+		DC.W		$4CC0,'MOVEM.L ',$0005,$0000
+case_4	DC.W		$D000,'ADD.B   ',$0000,$0000
+		DC.W		$D100,'ADD.B   ',$0001,$0000
+		DC.W		$D040,'ADD.W   ',$0000,$0000
+		DC.W		$D140,'ADD.W   ',$0001,$0000
+		DC.W		$D080,'ADD.L   ',$0000,$0001
+		DC.W		$D180,'ADD.L   ',$0001,$0000
+		DC.W		$D0C0,'ADDA.W  ',$0002,$0000
+		DC.W		$D1C0,'ADDA.L  ',$0002,$0001
+		DC.W		$C000,'AND.B   ',$0000,$0000
+		DC.W		$C100,'AND.B   ',$0001,$0000
+		DC.W		$C040,'AND.W   ',$0000,$0000
+		DC.W		$C140,'AND.W   ',$0001,$0000
+		DC.W		$C080,'AND.L   ',$0000,$0001
+		DC.W		$C180,'AND.L   ',$0001,$0000
+		DC.W		$B000,'CMP.B   ',$0000,$0000
+		DC.W		$B040,'CMP.W   ',$0000,$0000
+		DC.W		$B080,'CMP.L   ',$0000,$0001
+		DC.W		$B0C0,'CMPA.W  ',$0002,$0000
+		DC.W		$B1C0,'CMPA.L  ',$0002,$0001
+		DC.W		$B100,'EOR.B   ',$0001,$0000
+		DC.W		$B140,'EOR.W   ',$0001,$0000
+		DC.W		$B180,'EOR.L   ',$0001,$0000
+		DC.W		$41C0,'LEA     ',$0002,$0000
+		DC.W		$3040,'MOVEA.W ',$0002,$0000
+		DC.W		$2040,'MOVEA.L ',$0002,$0001
+		DC.W		$8000,'OR.B    ',$0000,$0000
+		DC.W		$8100,'OR.B    ',$0001,$0000
+		DC.W		$8040,'OR.W    ',$0000,$0000
+		DC.W		$8140,'OR.W    ',$0001,$0000
+		DC.W		$8080,'OR.L    ',$0000,$0001
+		DC.W		$8180,'OR.L    ',$0001,$0000
+		DC.W		$9000,'SUB.B   ',$0000,$0000
+		DC.W		$9100,'SUB.B   ',$0001,$0000
+		DC.W		$9040,'SUB.W   ',$0000,$0000
+		DC.W		$9140,'SUB.W   ',$0001,$0000
+		DC.W		$9080,'SUB.L   ',$0000,$0001
+		DC.W		$9180,'SUB.L   ',$0001,$0000
+		DC.W		$90C0,'SUBA.W  ',$0002,$0000
+		DC.W		$91C0,'SUBA.L  ',$0002,$0001
+case_5	DC.W		$6100,'BSR     ',$0000,$0000
+case_6	DC.W		$C140,'EXG     ',$0002,$0000
+		DC.W		$C148,'EXG     ',$0003,$0000
+		DC.W		$C188,'EXG     ',$0004,$0000
+		DC.W		$E008,'LSR.B   ',$0000,$0000
+		DC.W		$E028,'LSR.B   ',$0001,$0000
+		DC.W		$E048,'LSR.W   ',$0000,$0000
+		DC.W		$E068,'LSR.W   ',$0001,$0000
+		DC.W		$E088,'LSR.L   ',$0000,$0000
+		DC.W		$E0A8,'LSR.L   ',$0001,$0000
+		DC.W		$E108,'LSL.B   ',$0000,$0000
+		DC.W		$E128,'LSL.B   ',$0001,$0000
+		DC.W		$E148,'LSL.W   ',$0000,$0000
+		DC.W		$E168,'LSL.W   ',$0001,$0000
+		DC.W		$E188,'LSL.L   ',$0000,$0000
+		DC.W		$E1A8,'LSL.L   ',$0001,$0000
+		DC.W		$E018,'ROR.B   ',$0000,$0000
+		DC.W		$E038,'ROR.B   ',$0001,$0000
+		DC.W		$E058,'ROR.W   ',$0000,$0000
+		DC.W		$E078,'ROR.W   ',$0001,$0000
+		DC.W		$E098,'ROR.L   ',$0000,$0000
+		DC.W		$E0B8,'ROR.L   ',$0001,$0000
+		DC.W		$E118,'ROL.B   ',$0000,$0000
+		DC.W		$E138,'ROL.B   ',$0001,$0000
+		DC.W		$E158,'ROL.W   ',$0000,$0000
+		DC.W		$E178,'ROL.W   ',$0001,$0000
+		DC.W		$E198,'ROL.L   ',$0000,$0000
+		DC.W		$E1B8,'ROL.L   ',$0001,$0000
+case_7	DC.W		$1000,'MOVE.B  ',$0000,$0000
+		DC.W		$3000,'MOVE.W  ',$0001,$0000
+		DC.W		$2000,'MOVE.L  ',$0002,$0000
 
 null     DC.B    0                                 *Null terminator
 
@@ -1097,7 +1193,7 @@ which_add   DS.L    1
 buffer      DS.W        100                  *Print buffer
 
 exception   DS.W        1
-
+imme_flag   DS.W        1
 
 
 
@@ -1121,6 +1217,7 @@ terminator        DC.B        0                   *Null terminator
 
 
          END         pgm_start           *End of program and load address
+
 
 
 
