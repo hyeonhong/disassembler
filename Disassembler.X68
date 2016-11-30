@@ -213,7 +213,7 @@ op_loop     BSR         op_code
             MOVE.B      #13,D0
             TRAP        #15
             
-            LEA         string9,A1
+read_again  LEA         string9,A1
             MOVE.B      #14,D0
             TRAP        #15
             
@@ -221,13 +221,15 @@ op_loop     BSR         op_code
             MOVE.B      #2,D0
             TRAP        #15
             
+            CMPI.W      #0,D1
+            BEQ         beginning
             CMPI.W      #1,D1
-            BNE         beginning
+            BNE         read_again
             MOVE.B      (A1),D7
             CMPI.B      #$71,D7
             BEQ         the_end
             CMPI.B      #$51,D7
-            BNE         beginning            
+            BNE         read_again            
 
 the_end     MOVE.B      #9,D0               *halt console simulator
             TRAP        #15
@@ -1182,7 +1184,7 @@ string5     DC.W    'Memory is out of range. The correct memory range is 0 - FFF
 string6     DC.W    'Address has been modified to enforce the even address boundary.',0
 string7     DC.W    'Illegal address. End address should be greater or equal to the start address.',0
 string8     DC.W    'The memory range has been disassembled successfuly.',0
-string9     DC.W    'Press any key to continue. (Press <q> to quit): ',0
+string9     DC.W    'Press <ENTER> to start over. (Press <q> to quit): ',0
 newline     DC.W    '',0
 
 reader      DS.L    100
@@ -1220,6 +1222,7 @@ terminator        DC.B        0                   *Null terminator
 
 
          END         pgm_start           *End of program and load address
+
 
 
 
