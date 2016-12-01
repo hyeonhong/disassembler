@@ -614,6 +614,11 @@ next_3_5    MOVEA.L     A2,A0               *Restore to the end point of memory 
             SUBA.L      #1,A0               *move back 1 byte the pointer to memory to decode
             MOVE.W      #$0002,(A4)         *jump_flag - 0002
             JSR         e_a
+            *check for the bad_flag
+            LEA         bad_flag,A3
+            CMPI.W      #0,(A3)
+            BNE         exit_op
+            
             MOVEA.L     A0,A3               *Save A0 to A3 as a back-up (which is the starting point for next instruction)
             MOVE.W      #$2C20,(A1)+        *write ',' and ' ' (space) of ascii-hex into the buffer
             
@@ -665,6 +670,11 @@ skip_imme_2 CMPI.W      #$0000,D2
             SUBA.L      #1,A0               *move back 1 byte the pointer to memory to decode
             MOVE.W      #$0000,(A4)         *jump_flag - 0000
             JSR         e_a
+            *check for the bad_flag
+            LEA         bad_flag,A3
+            CMPI.W      #0,(A3)
+            BNE         exit_op
+            
             MOVE.W      #$2C20,(A1)+        *write ',' and ' ' (space) of ascii-hex into the buffer
             xreg2ascii
             BRA         exit_op
@@ -685,6 +695,11 @@ next_4_2    MOVEA.L     A2,A0               *Restore to the end point of memory 
             SUBA.L      #1,A0               *move back 1 byte the pointer to memory to decode
             MOVE.W      #$0000,(A4)         *jump_flag - 0000
             JSR         e_a
+            *check for the bad_flag
+            LEA         bad_flag,A3
+            CMPI.W      #0,(A3)
+            BNE         exit_op
+            
             MOVE.W      #$2C20,(A1)+        *write ',' and ' ' (space) of ascii-hex into the buffer
             MOVE.B      #$41,(A1)+          *write the ascii-hex value of 'A' into the buffer            
             oreg2ascii
@@ -845,9 +860,8 @@ next_7_2    MOVEA.L     A2,A0               *Restore to the end point of memory 
             BRA         exit_op
 
 
-
-exit_op     *check for the bad_flag
-            LEA         bad_flag,A2
+            *check for the bad_flag
+exit_op     LEA         bad_flag,A2
             CMPI.W      #0,(A2)
             BEQ         good_data
             MOVE.W      #0,(A2)             *reset the bag_flag
@@ -1271,6 +1285,7 @@ terminator        DC.B        0                   *Null terminator
 
 
          END         pgm_start           *End of program and load address
+
 
 
 
