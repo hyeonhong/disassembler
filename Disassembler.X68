@@ -209,7 +209,7 @@ op_loop     BSR         op_code
             BNE         check_add
 
 enter2con   LEA         string8,A1
-            MOVE.B      #13,D0
+            MOVE.B      #14,D0
             TRAP        #15
 
             LEA         reader,A1
@@ -1244,6 +1244,7 @@ terminator        DC.B        0                   *Null terminator
 
 
          END         pgm_start           *End of program and load address
+
 
 
 
