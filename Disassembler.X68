@@ -183,10 +183,10 @@ stack       EQU         $A0000              *Put stack here
             
 
 
-beginning   MOVE.B      #0,(A5)             *Take the user input for start address
-            BSR         io_code
-            MOVE.B      #1,(A5)             *Take the user input for end address
-            BSR         io_code
+beginning   BSR         io_code             *Take the input for starting address
+            MOVE.B      #1,(A5)             *change the value of which_add to 1 - which indicates the end address
+            BSR         io_code             *Take the input for ending address
+            MOVE.B      #0,(A5)             *Reset the value
 
             LEA         newline,A1
             MOVE.B      #13,D0
@@ -1401,7 +1401,7 @@ reader2     DS.L    100
 
 start_addr  DS.L    10
 end_addr    DS.L    10
-which_add   DS.L    1
+which_add   DC.L    0
 
 
 buffer      DS.W        100                  *Print buffer
@@ -1432,6 +1432,7 @@ terminator        DC.B        0                   *Null terminator
 
 
          END         pgm_start           *End of program and load address
+
 
 
 
