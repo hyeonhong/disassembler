@@ -891,7 +891,7 @@ ea2b_4      CMPI.W      #%100,D5
             BRA         ea_exit
 ea2b_5      CMPI.W      #%101,D5
             BNE         ea2b_6
-            MOVE.B      #$28,(A1)+        *write the ascii-hex value of '(' into the buffer
+            MOVE.W      #$2028,(A1)+        *write the ascii-hex value of ' ' and '(' into the buffer
 
             MOVE.W      (A0)+,D7
             
@@ -911,13 +911,13 @@ numberbit1  MOVE.W      D7,D6
             MOVE.B      D3,D1               *Restore the back-up to D1
             ADDI.B      #$30,D1
             MOVE.B      D1,(A1)+            *write the ascii-hex value of '0~7' into the buffer            
-            MOVE.B      #$29,(A1)+          *write the ascii-hex value of ')' into the buffer
+            MOVE.W      #$2920,(A1)+          *write the ascii-hex value of ')' and ' ' into the buffer
             BRA         ea_exit
 
 ea2b_6      CMPI.W      #%110,D5
             BNE         ea2b_7
 
-            MOVE.B      #$28,(A1)+          *write the ascii-hex value of '(' into the buffer
+            MOVE.W      #$2028,(A1)+        *write the ascii-hex value of ' ' and '(' into the buffer
 
             MOVE.W      (A0)+,D7
             MOVE.W      D7,D6
@@ -949,7 +949,7 @@ x_number1   MOVE.B      D3,D1               *Restore the back-up to D1
             ADDI.B      #$30,D1
             MOVE.B      D1,(A1)+            *write the ascii-hex value of '0~7' into the buffer
         
-            MOVE.B      #$29,(A1)+          *write the ascii-hex value of ')' into the buffer
+            MOVE.W      #$2920,(A1)+          *write the ascii-hex value of ')' and ' ' into the buffer
             BRA         ea_exit
 
 
@@ -994,7 +994,7 @@ not_long    MOVE.W      (A0)+,D1            *read the immediate value from the m
             
 ea2b_7_3    CMPI.B      #%010,D1
             BNE         ea2b_7_4
-            MOVE.B      #$28,(A1)+        *write the ascii-hex value of '(' into the buffer
+            MOVE.W      #$2028,(A1)+        *write the ascii-hex value of ' ' and '(' into the buffer
 
             MOVE.W      (A0)+,D7
             
@@ -1012,11 +1012,11 @@ numberbit3  MOVE.W      D7,D6
 
             MOVE.W      #$5043,(A1)+        *write the ascii-hex value of 'PC' into the buffer
             
-            MOVE.B      #$29,(A1)+          *write the ascii-hex value of ')' into the buffer
+            MOVE.W      #$2920,(A1)+          *write the ascii-hex value of ')' and ' ' into the buffer
             BRA         ea_exit
 
             * mode = #%111 & reg = #$011
-ea2b_7_4    MOVE.B      #$28,(A1)+          *write the ascii-hex value of '(' into the buffer
+ea2b_7_4    MOVE.W      #$2028,(A1)+        *write the ascii-hex value of ' ' and '(' into the buffer
 
             MOVE.W      (A0)+,D7
             MOVE.W      D7,D6
@@ -1045,7 +1045,7 @@ x_number2   MOVE.B      D3,D1               *Restore the back-up to D1
             ADDI.B      #$30,D1
             MOVE.B      D1,(A1)+            *write the ascii-hex value of '0~7' into the buffer
         
-            MOVE.B      #$29,(A1)+          *write the ascii-hex value of ')' into the buffer
+            MOVE.W      #$2920,(A1)+          *write the ascii-hex value of ')' and ' ' into the buffer
             BRA         ea_exit
 
 
@@ -1222,6 +1222,7 @@ terminator        DC.B        0                   *Null terminator
 
 
          END         pgm_start           *End of program and load address
+
 
 
 
