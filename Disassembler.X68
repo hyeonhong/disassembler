@@ -145,6 +145,7 @@ parsing_1   MACRO
             CMPI.B      #7,D5
             BNE         ea_check\@
             ADD.B       D1,D5
+            ADDA.W      (A6),A5             *add displacement to the beginning of table
 ea_check\@  MOVE.B      (A5)+,D1
             CMP.B       D5,D1
             BEQ         set_as_bad
@@ -893,6 +894,7 @@ e_a         MOVEM.L     A2-A6/D0-D7,-(SP)
             LEA         jump_flag,A2
             LEA         bad_flag,A4
             LEA         ea_table,A5
+            LEA         dis_table,A6
             MOVE.W      (A2),D2
 
             CMPI.W      #4,D2               *is it MOVE instruction or not?
@@ -1432,6 +1434,7 @@ terminator        DC.B        0                   *Null terminator
 
 
          END         pgm_start           *End of program and load address
+
 
 
 
