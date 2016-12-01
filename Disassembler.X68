@@ -141,6 +141,18 @@ parsing_1   MACRO
             ANDI.B      #%00000111,D1
             MOVE.B      D5,D3               *D3 - back-up
             MOVE.B      D1,D4               *D4 - back-up
+
+            CMPI.B      #7,D5
+            BNE         ea_check\@
+            ADD.B       D1,D5
+ea_check\@  MOVE.B      (A5)+,D1
+            CMP.B       D5,D1
+            BEQ         set_as_bad
+            CMPI.B      #15,D1
+            BNE         ea_check\@
+                     
+            MOVE.B      D3,D5               *Restore the value from back-up
+            MOVE.B      D4,D1               *Restore the value from back-up
             ADDA.W      (A2),A0             *add jump_flag flag value to the memory pointer
             ENDM
             
@@ -447,7 +459,7 @@ loop_7      LEA         null,A5
             ADDA.L      #14,A6              *Move to next row
             CMPA.L      A5,A6
             BNE         loop_7
-            MOVE.L      #$44415441,(A1)+    *write 'DATA' of ascii-hex into the buffer
+data_xxxx   MOVE.L      #$44415441,(A1)+    *write 'DATA' of ascii-hex into the buffer
             MOVE.L      #$20202020,(A1)+    *write '    ' of ascii-hex into the buffer
             MOVE.W      D0,D6               *D6 holds the original hex-value and will be used in the below MACRO
             add2ascii
@@ -834,7 +846,16 @@ next_7_2    MOVEA.L     A2,A0               *Restore to the end point of memory 
 
 
 
-exit_op     MOVE.W      #$0000,(A1)+        *write '0'(null) of ascii-hex into the buffer
+exit_op     *check for the bad_flag
+            LEA         bad_flag,A2
+            CMPI.W      #0,(A2)
+            BEQ         good_data
+            MOVE.W      #0,(A2)             *reset the bag_flag
+            LEA         buffer,A1
+            ADDA.L      #16,A1              *adjust the buffer pointer
+            BRA         data_xxxx
+            
+good_data   MOVE.W      #$0000,(A1)+        *write '0'(null) of ascii-hex into the buffer
             MOVEM.L     (SP)+, A2-A6/D0-D7  *Restore the working registers from stack
             RTS                             *Return to the program
 
@@ -847,6 +868,8 @@ exit_op     MOVE.W      #$0000,(A1)+        *write '0'(null) of ascii-hex into t
 
 e_a         MOVEM.L     A2-A6/D0-D7,-(SP)
             LEA         jump_flag,A2
+            LEA         bad_flag,A4
+            LEA         ea_table,A5
             MOVE.W      (A2),D2
 
             CMPI.W      #4,D2               *is it MOVE instruction or not?
@@ -869,10 +892,13 @@ ea_move_d   MOVE.W      #$2C20,(A1)+        *write ',' and ' ' (space) of ascii-
             MOVE.W      #0,(A3)
             BRA         ea2buffer
             
+set_as_bad  MOVE.W      #1,(A4)
+            BRA         ea_exit_2
+            
 ea_exit     LEA         move_flag,A3
             CMPI.W      #0,(A3)
             BNE         ea_move_d
-            MOVEM.L     (SP)+, A2-A6/D0-D7
+ea_exit_2   MOVEM.L     (SP)+, A2-A6/D0-D7
             RTS
 
 ea2buffer   CMPI.W      #%000,D5
@@ -1194,7 +1220,7 @@ case_7	DC.W		$1000,'MOVE.B  ',$0000,$0000
 
 null     DC.B    0                                 *Null terminator
 
-
+ea_table    DC.W    $0000,$0019
 
 
 string1     DC.W    'Enter the starting address in Hex: ',0
@@ -1219,6 +1245,7 @@ which_add   DS.L    1
 
 buffer      DS.W        100                  *Print buffer
 
+bad_flag    DC.W        0
 jump_flag   DC.W        0
 imme_flag   DC.W        0
 move_flag   DC.W        0
@@ -1244,6 +1271,7 @@ terminator        DC.B        0                   *Null terminator
 
 
          END         pgm_start           *End of program and load address
+
 
 
 
