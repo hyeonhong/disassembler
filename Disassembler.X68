@@ -414,20 +414,20 @@ op_code     MOVEM.L     A2-A6/D0-D7,-(SP)   *Save the working registers on stack
             MOVE.W      (A0)+,D0
 loop_1      CMP.W       (A6),D0
             BEQ         to_buffer_1
-            ADDA.L      #14,A6              *Move to next row
+            ADDA.L      #16,A6              *Move to next row
             CMPA.L      A5,A6
             BNE         loop_1
 loop_2      MOVE.W      D0,D1               *To modify the value, copy D0 to D1
             ANDI.W      #%1111111111111000,D1
             CMP.W       (A6),D1
             BEQ         to_buffer_2
-            ADDA.L      #14,A6              *Move to next row
+            ADDA.L      #16,A6              *Move to next row
 loop_3      LEA         case_4,A5
             MOVE.W      D0,D1
             ANDI.W      #%1111111111000000,D1
             CMP.W       (A6),D1
             BEQ         to_buffer_3
-            ADDA.L      #14,A6              *Move to next row
+            ADDA.L      #16,A6              *Move to next row
             CMPA.L      A5,A6
             BNE         loop_3
 loop_4      LEA         case_5,A5
@@ -435,20 +435,20 @@ loop_4      LEA         case_5,A5
             ANDI.W      #%1111000111000000,D1
             CMP.W       (A6),D1
             BEQ         to_buffer_4
-            ADDA.L      #14,A6              *Move to next row
+            ADDA.L      #16,A6              *Move to next row
             CMPA.L      A5,A6
             BNE         loop_4            
 loop_5      MOVE.W      D0,D1
             ANDI.W      #%1111111100000000,D1
             CMP.W       (A6),D1
             BEQ         to_buffer_5
-            ADDA.L      #14,A6              *Move to next row
+            ADDA.L      #16,A6              *Move to next row
 loop_6      LEA         case_7,A5
             MOVE.W      D0,D1
             ANDI.W      #%1111000111111000,D1
             CMP.W       (A6),D1
             BEQ         to_buffer_6
-            ADDA.L      #14,A6              *Move to next row
+            ADDA.L      #16,A6              *Move to next row
             CMPA.L      A5,A6
             BNE         loop_6
 loop_7      LEA         null,A5
@@ -456,7 +456,7 @@ loop_7      LEA         null,A5
             ANDI.W      #%1111000000000000,D1
             CMP.W       (A6),D1
             BEQ         to_buffer_7
-            ADDA.L      #14,A6              *Move to next row
+            ADDA.L      #16,A6              *Move to next row
             CMPA.L      A5,A6
             BNE         loop_7
 data_xxxx   MOVE.L      #$44415441,(A1)+    *write 'DATA' of ascii-hex into the buffer
@@ -482,7 +482,9 @@ to_buffer_3 ADDA.L      #2,A6               *Move 1 column to the right
             MOVE.L      (A6)+,(A1)+         *Write two long words that contain ascii values to the buffer
             MOVE.L      (A6)+,(A1)+
             MOVE.W      (A6)+,D2            *D2 holds the syntax pattern number
-            MOVE.W      (A6),D3             *D3 temporarily holds the imme_flag value
+            MOVE.W      (A6)+,D3            *D3 temporarily holds the imme_flag value
+            LEA         dis_table,A3        *displacement of first column for each instruction in ea_table
+            MOVE.W      (A6),(A3)
             CMPI.W      #0,D3
             BEQ         skip_imme_1
             LEA         imme_flag,A3
@@ -658,7 +660,9 @@ to_buffer_4 ADDA.L      #2,A6               *Move 1 column to the right
             MOVE.L      (A6)+,(A1)+         *Write two long words that contain ascii values to the buffer
             MOVE.L      (A6)+,(A1)+
             MOVE.W      (A6)+,D2            *D2 holds the syntax pattern number
-            MOVE.W      (A6),D3             *D3 temporarily holds the imme_flag value
+            MOVE.W      (A6)+,D3            *D3 temporarily holds the imme_flag value
+            LEA         dis_table,A3        *displacement of first column for each instruction in ea_table
+            MOVE.W      (A6),(A3)
             CMPI.W      #0,D3
             BEQ         skip_imme_2
             LEA         imme_flag,A3
@@ -711,7 +715,9 @@ to_buffer_5 ADDA.L      #2,A6               *Move 1 column to the right
             MOVE.L      (A6)+,(A1)+         *Write two long words that contain ascii values to the buffer
             MOVE.L      (A6)+,(A1)+
             MOVE.W      (A6)+,D2            *D2 holds the syntax pattern number
-            MOVE.W      (A6),D3             *D3 temporarily holds the imme_flag value
+            MOVE.W      (A6)+,D3            *D3 temporarily holds the imme_flag value
+            LEA         dis_table,A3        *displacement of first column for each instruction in ea_table
+            MOVE.W      (A6),(A3)
             CMPI.W      #0,D3
             BEQ         skip_imme_3
             LEA         imme_flag,A3
@@ -763,7 +769,9 @@ to_buffer_6 ADDA.L      #2,A6               *Move 1 column to the right
             MOVE.L      (A6)+,(A1)+         *Write two long words that contain ascii values to the buffer
             MOVE.L      (A6)+,(A1)+
             MOVE.W      (A6)+,D2            *D2 holds the syntax pattern number
-            MOVE.W      (A6),D3             *D3 temporarily holds the imme_flag value
+            MOVE.W      (A6)+,D3            *D3 temporarily holds the imme_flag value
+            LEA         dis_table,A3        *displacement of first column for each instruction in ea_table
+            MOVE.W      (A6),(A3)
             CMPI.W      #0,D3
             BEQ         skip_imme_4
             LEA         imme_flag,A3
@@ -829,7 +837,9 @@ to_buffer_7 ADDA.L      #2,A6               *Move 1 column to the right
             MOVE.L      (A6)+,(A1)+         *Write two long words that contain ascii values to the buffer
             MOVE.L      (A6)+,(A1)+
             MOVE.W      (A6)+,D2            *D2 holds the syntax pattern number
-            MOVE.W      (A6),D3             *D3 temporarily holds the imme_flag value
+            MOVE.W      (A6)+,D3            *D3 temporarily holds the imme_flag value
+            LEA         dis_table,A3        *displacement of first column for each instruction in ea_table
+            MOVE.W      (A6),(A3)
             CMPI.W      #0,D3
             BEQ         skip_imme_5
             LEA         imme_flag,A3
@@ -867,8 +877,7 @@ exit_op     LEA         bad_flag,A2
             MOVE.W      #0,(A2)             *reset the bag_flag
             LEA         buffer,A1
             ADDA.L      #16,A1              *adjust the buffer pointer
-            BRA         data_xxxx
-            
+            BRA         data_xxxx            
 good_data   MOVE.W      #$0000,(A1)+        *write '0'(null) of ascii-hex into the buffer
             MOVEM.L     (SP)+, A2-A6/D0-D7  *Restore the working registers from stack
             RTS                             *Return to the program
@@ -1263,7 +1272,7 @@ bad_flag    DC.W        0
 jump_flag   DC.W        0
 imme_flag   DC.W        0
 move_flag   DC.W        0
-
+dis_table   DC.W        0
 
 
 
@@ -1285,6 +1294,7 @@ terminator        DC.B        0                   *Null terminator
 
 
          END         pgm_start           *End of program and load address
+
 
 
 
