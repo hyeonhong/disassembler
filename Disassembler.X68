@@ -191,6 +191,7 @@ beginning   MOVE.B      #0,(A5)             *Take the user input for start addre
             LEA         (A6),A4             *A4 - end address
 
             LEA         buffer,A1           *A1 - pointer to the buffer
+            CLR.L       D2                  *D2 - counter for page break
 
 op_loop     BSR         op_code
             *print to console
@@ -198,14 +199,34 @@ op_loop     BSR         op_code
             MOVE.B      #13,D0
             TRAP        #15
             
-            CMPA.L      A0,A4
+            ADDQ.B      #1,D2
+            *D2 MOD 25
+            DIVU        #25,D2
+            SWAP        D2                  *move the remainder to the lower-end of D2
+            ANDI.L      #$00FF,D2           *clean up the upper-end of D2
+
+            CMPI.B      #0,D2               *Is D2 zero or not?
+            BNE         check_add
+
+enter2con   LEA         string8,A1
+            MOVE.B      #13,D0
+            TRAP        #15
+
+            LEA         reader,A1
+            MOVE.B      #2,D0
+            TRAP        #15
+            
+            CMPI.W      #0,D1
+            BNE         enter2con
+            
+check_add   CMPA.L      A0,A4
             BGT         op_loop
 
             LEA         newline,A1
             MOVE.B      #13,D0
             TRAP        #15
             
-            LEA         string8,A1
+            LEA         string9,A1
             MOVE.B      #13,D0
             TRAP        #15
 
@@ -213,7 +234,7 @@ op_loop     BSR         op_code
             MOVE.B      #13,D0
             TRAP        #15
             
-read_again  LEA         string9,A1
+read_again  LEA         string10,A1
             MOVE.B      #14,D0
             TRAP        #15
             
@@ -1183,8 +1204,9 @@ string4     DC.W    'Invalid character detected. Only hexadecimal characters are
 string5     DC.W    'Memory is out of range. The correct memory range is 0 - FFFFFF (16MB) ',0
 string6     DC.W    'Address has been modified to enforce the even address boundary.',0
 string7     DC.W    'Illegal address. End address should be greater or equal to the start address.',0
-string8     DC.W    'The memory range has been disassembled successfuly.',0
-string9     DC.W    'Press <ENTER> to start over. (Press <q> to quit): ',0
+string8     DC.W    'Press <ENTER> to continue... ',0
+string9     DC.W    'The memory range has been disassembled successfuly.',0
+string10    DC.W    'Press <ENTER> to start over. (Press <q> to quit): ',0
 newline     DC.W    '',0
 
 reader      DS.L    100
@@ -1222,6 +1244,7 @@ terminator        DC.B        0                   *Null terminator
 
 
          END         pgm_start           *End of program and load address
+
 
 
 
