@@ -180,11 +180,11 @@ stack       EQU         $A0000              *Put stack here
         
             ORG         pgm_start           *Program Origin
             LEA         stack, SP           *Initialize the stack pointer
-            LEA         which_add,A5
             
 
 
-beginning   BSR         io_code             *Take the input for starting address
+beginning   LEA         which_add,A5
+            BSR         io_code             *Take the input for starting address
             MOVE.B      #1,(A5)             *change the value of which_add to 1 - which indicates the end address
             BSR         io_code             *Take the input for ending address
             MOVE.B      #0,(A5)             *Reset the value
@@ -1160,9 +1160,9 @@ case_3	DC.W		$0600,'ADDI.B  ',$0001,$0000,$0018
 		DC.W		$4600,'NOT.B   ',$0000,$0000,$00D8
 		DC.W		$4640,'NOT.W   ',$0000,$0000,$00E0
 		DC.W		$4680,'NOT.L   ',$0000,$0000,$00E8
-		DC.W		$0000,'ORI.B   ',$0001,$0000,$00F0
-		DC.W		$0040,'ORI.W   ',$0002,$0000,$00F8
-		DC.W		$0080,'ORI.L   ',$0003,$0000,$0100
+*		DC.W		$0000,'ORI.B   ',$0001,$0000,$00F0
+*		DC.W		$0040,'ORI.W   ',$0002,$0000,$00F8
+*		DC.W		$0080,'ORI.L   ',$0003,$0000,$0100
 		DC.W		$E6C0,'ROR     ',$0000,$0000,$0108
 		DC.W		$E7C0,'ROL     ',$0000,$0000,$0110
 		DC.W		$0400,'SUBI.B  ',$0001,$0000,$0118
@@ -1434,6 +1434,7 @@ terminator        DC.B        0                   *Null terminator
 
 
          END         pgm_start           *End of program and load address
+
 
 
 
