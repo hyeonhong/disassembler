@@ -172,16 +172,24 @@ parsing_2   MACRO
             ANDI.W      #%0000000000000111,D4
             ENDM
 
-
+*------------------------------------------------------------------------------
+* System Equates
+*------------------------------------------------------------------------------
 
 pgm_start   EQU         $1000               *Program runs here
 stack       EQU         $A0000              *Put stack here
-
+LF          EQU         $0A                 * ASCII for line feed
+CR          EQU         $0D                 * ASCII for carriage return
+*------------------------------------------------------------------------------
+* Program starts
+*------------------------------------------------------------------------------
         
             ORG         pgm_start           *Program Origin
             LEA         stack, SP           *Initialize the stack pointer
-            
 
+welcome     LEA         opening,A1          * display opening message
+            MOVE.B      #14,D0              * task number in D0
+            TRAP        #15                 * do task14
 
 beginning   LEA         which_add,A5
             BSR         io_code             *Take the input for starting address
@@ -1441,9 +1449,28 @@ move_flag   DC.W        0
 dis_table   DC.W        0
 
 
+opening     DC.B   '            _________   _______     ___     _____  _____ ',CR,LF
+            DC.B   '           |___   ___| |  _____|   /   \   |     \/     |',CR,LF
+            DC.B   '               | |     | |        / / \ \  | |\ \  / /| |',CR,LF
+            DC.B   '               | |     | |_____  / /___\ \ | | \ \/ / | |',CR,LF
+            DC.B   '               | |     |  _____| |  ___  | | |  \__/  | |',CR,LF
+            DC.B   '               | |     | |       | |   | | | |        | |',CR,LF
+            DC.B   '               | |     | |_____  | |   | | | |        | |',CR,LF
+            DC.B   '               |_|     |_______| |_|   |_| |_|        |_|',CR,LF
+            DC.B   ' _______     ___    ________   _   ___      _   _______      ___     _  ',CR,LF
+            DC.B   '|  ___  |   /   \  |_______ | | | |   \    | | |  ___  \    /   \   | | ',CR,LF
+            DC.B   '| |   | |  / / \ \       / /  | | | |\ \   | | | |   |_|   / / \ \  | | ',CR,LF
+            DC.B   '| |___/ / / /___\ \     / /   | | | | \ \  | | | |  ___   / /___\ \ | | ',CR,LF
+            DC.B   '|  ___ <  |  ___  |    / /    | | | |  \ \ | | | | |__ |  |  ___  | | | ',CR,LF
+            DC.B   '| |   \ \ | |   | |   / /     | | | |   \ \| | | |   | |  | |   | | |_| ',CR,LF
+            DC.B   '| |___| | | |   | |  / /____  | | | |    \ | | |  \__| |  | |   | |  _  ',CR,LF
+            DC.B   '|_______| |_|   |_| /_______| |_| |_|     \__|  \ _____/  |_|   |_| |_| ',CR,LF
+            DC.B   '########################################################################',CR,LF
+            DC.B   '                                                      CSS422 DISSEMBLER ',CR,LF,0
 
 
-            
+
+
 ***************** TEST PROGRAM - START ***********************************
 
         ORG     $20000
@@ -1460,6 +1487,7 @@ terminator        DC.B        0                   *Null terminator
 
 
          END         pgm_start           *End of program and load address
+
 
 
 
