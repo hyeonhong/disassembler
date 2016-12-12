@@ -852,6 +852,7 @@ next_6_4    MOVE.B      #$44,(A1)+          *write the ascii-hex value of 'D' in
             oxreg2ascii
             MOVE.W      #$2C20,(A1)+        *write ',' and ' ' (space) of ascii-hex into the buffer
             MOVE.B      #$41,(A1)+          *write the ascii-hex value of 'A' into the buffer
+            oyreg2ascii
             BRA         exit_op
 
 
