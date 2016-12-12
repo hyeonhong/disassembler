@@ -478,7 +478,9 @@ to_buffer_2 ADDA.L      #2,A6               *Move 1 column to the right
             xreg2ascii
             BRA         exit_op            
 
-to_buffer_3 ADDA.L      #2,A6               *Move 1 column to the right
+to_buffer_3 LEA         loop_num,A2
+            MOVE.W      #3,(A2)             *Save the current loop number in case there's a bad flag
+            ADDA.L      #2,A6               *Move 1 column to the right
             MOVEA.L     A0,A2               *Save A0 to A2 as a back-up
             MOVE.L      (A6)+,(A1)+         *Write two long words that contain ascii values to the buffer
             MOVE.L      (A6)+,(A1)+
@@ -656,7 +658,9 @@ mask_next_2 ROL.W       #1,D6
 
 
 
-to_buffer_4 ADDA.L      #2,A6               *Move 1 column to the right
+to_buffer_4 LEA         loop_num,A2
+            MOVE.W      #4,(A2)             *Save the current loop number in case there's a bad flag
+            ADDA.L      #2,A6               *Move 1 column to the right
             MOVEA.L     A0,A2               *Save A0 to A2 as a back-up
             MOVE.L      (A6)+,(A1)+         *Write two long words that contain ascii values to the buffer
             MOVE.L      (A6)+,(A1)+
@@ -765,7 +769,9 @@ next_5_2    MOVE.L      A0,D4               *D4 holds the address right before t
             add2ascii
             BRA         exit_op
 
-to_buffer_6 ADDA.L      #2,A6               *Move 1 column to the right
+to_buffer_6 LEA         loop_num,A2
+            MOVE.W      #6,(A2)             *Save the current loop number in case there's a bad flag
+            ADDA.L      #2,A6               *Move 1 column to the right
             MOVEA.L     A0,A2               *Save A0 to A2 as a back-up
             MOVE.L      (A6)+,(A1)+         *Write two long words that contain ascii values to the buffer
             MOVE.L      (A6)+,(A1)+
@@ -833,7 +839,9 @@ next_6_4    MOVE.B      #$44,(A1)+          *write the ascii-hex value of 'D' in
             BRA         exit_op
 
 
-to_buffer_7 ADDA.L      #2,A6               *Move 1 column to the right
+to_buffer_7 LEA         loop_num,A2
+            MOVE.W      #7,(A2)             *Save the current loop number in case there's a bad flag
+            ADDA.L      #2,A6               *Move 1 column to the right
             MOVEA.L     A0,A2               *Save A0 to A2 as a back-up
             MOVE.L      (A6)+,(A1)+         *Write two long words that contain ascii values to the buffer
             MOVE.L      (A6)+,(A1)+
@@ -875,9 +883,26 @@ next_7_2    MOVEA.L     A2,A0               *Restore to the end point of memory 
 exit_op     LEA         bad_flag,A2
             CMPI.W      #0,(A2)
             BEQ         good_data
+
+            *bad data
             MOVE.W      #0,(A2)             *reset the bag_flag
             LEA         buffer,A1
             ADDA.L      #16,A1              *adjust the buffer pointer
+
+            LEA         loop_num,A2
+            CMPI.W      #3,(A2)
+            BNE         is_it_4
+            LEA         case_4,A6
+            BRA         loop_4
+is_it_4     CMPI.W      #4,(A2)
+            BNE         is_it_6
+            LEA         case_5,A6
+            BRA         loop_5
+is_it_6     CMPI.W      #6,(A2)
+            BNE         is_it_7
+            LEA         case_7,A6
+            BRA         loop_7
+is_it_7     LEA         null,A6
             BRA         data_xxxx            
 good_data   MOVE.W      #$0000,(A1)+        *write '0'(null) of ascii-hex into the buffer
             MOVEM.L     (SP)+, A2-A6/D0-D7  *Restore the working registers from stack
@@ -1435,6 +1460,7 @@ terminator        DC.B        0                   *Null terminator
 
 
          END         pgm_start           *End of program and load address
+
 
 
 
