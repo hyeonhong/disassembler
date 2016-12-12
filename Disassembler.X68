@@ -51,7 +51,7 @@ hex_next\@  LSR.L       #8,D5
 
 
 *convert reg_digits to ascii-hex and write to the buffer
-xreg2ascii  MACRO
+dxreg2ascii MACRO
             MOVE.B      #$44,(A1)+          *write the ascii-hex value of 'D' into the buffer
             MOVE.W      D0,D1
             ANDI.W      #%0000111000000000,D1
@@ -61,7 +61,7 @@ xreg2ascii  MACRO
             MOVE.B      D1,(A1)+            *write the ascii-hex value into the buffer
             ENDM
 
-yreg2ascii  MACRO
+dyreg2ascii MACRO
             MOVE.B      #$44,(A1)+          *write the ascii-hex value of 'D' into the buffer
             MOVE.W      D0,D1
             ANDI.W      #%0000000000000111,D1
@@ -69,9 +69,18 @@ yreg2ascii  MACRO
             MOVE.B      D1,(A1)+            *write the ascii-hex value into the buffer
             ENDM
             
-oreg2ascii  MACRO
+oxreg2ascii MACRO
             MOVE.W      D0,D1
             ANDI.W      #%0000111000000000,D1
+            LSR.W       #8,D1
+            LSR.W       #1,D1
+            ADDI.B      #$30,D1
+            MOVE.B      D1,(A1)+            *write the ascii-hex value into the buffer
+            ENDM
+            
+oyreg2ascii MACRO
+            MOVE.W      D0,D1
+            ANDI.W      #%0000000000000111,D1
             LSR.W       #8,D1
             LSR.W       #1,D1
             ADDI.B      #$30,D1
@@ -483,7 +492,7 @@ to_buffer_1 ADDA.L      #2,A6               *Move 1 column to the right
 to_buffer_2 ADDA.L      #2,A6               *Move 1 column to the right
             MOVE.L      (A6)+,(A1)+         *Write two long words that contain ascii values to the buffer
             MOVE.L      (A6)+,(A1)+
-            xreg2ascii
+            dxreg2ascii
             BRA         exit_op            
 
 to_buffer_3 LEA         loop_num,A2
@@ -693,13 +702,13 @@ skip_imme_2 CMPI.W      #$0000,D2
             BNE         exit_op
             
             MOVE.W      #$2C20,(A1)+        *write ',' and ' ' (space) of ascii-hex into the buffer
-            xreg2ascii
+            dxreg2ascii
             BRA         exit_op
             
 next_4_1    CMPI.W      #$0001,D2
             BNE         next_4_2
             * 0001 case - Dn, <ea>
-            xreg2ascii
+            dxreg2ascii
             MOVE.W      #$2C20,(A1)+        *write ',' and ' ' (space) of ascii-hex into the buffer
             MOVEA.L     A2,A0               *Restore to the end point of memory instruction
             SUBA.L      #1,A0               *move back 1 byte the pointer to memory to decode
@@ -719,7 +728,7 @@ next_4_2    MOVEA.L     A2,A0               *Restore to the end point of memory 
             
             MOVE.W      #$2C20,(A1)+        *write ',' and ' ' (space) of ascii-hex into the buffer
             MOVE.B      #$41,(A1)+          *write the ascii-hex value of 'A' into the buffer            
-            oreg2ascii
+            oxreg2ascii
             BRA         exit_op
 
 
@@ -807,43 +816,42 @@ skip_imme_4 CMPI.W      #$0000,D2
 one2seven   MOVE.B      D1,(A1)+            *write the ascii-hex value into the buffer
 
             MOVE.W      #$2C20,(A1)+        *write ',' and ' ' (space) of ascii-hex into the buffer
-            yreg2ascii
+            dyreg2ascii
             BRA         exit_op
             
 next_6_1    CMPI.W      #$0001,D2
             BNE         next_6_2
             * 0001 case - (R) Dx, Dy
-            xreg2ascii
+            dxreg2ascii
             MOVE.W      #$2C20,(A1)+        *write ',' and ' ' (space) of ascii-hex into the buffer
-            yreg2ascii
+            dyreg2ascii
             BRA         exit_op
 
 next_6_2    CMPI.W      #$0002,D2
             BNE         next_6_3
             * 0002 case - Dx, Dy
             MOVE.B      #$44,(A1)+          *write the ascii-hex value of 'D' into the buffer
-            oreg2ascii
+            oxreg2ascii
             MOVE.W      #$2C20,(A1)+        *write ',' and ' ' (space) of ascii-hex into the buffer
             MOVE.B      #$44,(A1)+          *write the ascii-hex value of 'D' into the buffer
-            oreg2ascii
+            oyreg2ascii
             BRA         exit_op
             
 next_6_3    CMPI.W      #$0003,D2
             BNE         next_6_4
             * 0003 case - Ax, Ay
             MOVE.B      #$41,(A1)+          *write the ascii-hex value of 'A' into the buffer
-            oreg2ascii
+            oxreg2ascii
             MOVE.W      #$2C20,(A1)+        *write ',' and ' ' (space) of ascii-hex into the buffer
             MOVE.B      #$41,(A1)+          *write the ascii-hex value of 'A' into the buffer
-            oreg2ascii
+            oyreg2ascii
             BRA         exit_op
 
             * 0004 case - Dx, Ay
 next_6_4    MOVE.B      #$44,(A1)+          *write the ascii-hex value of 'D' into the buffer
-            oreg2ascii
+            oxreg2ascii
             MOVE.W      #$2C20,(A1)+        *write ',' and ' ' (space) of ascii-hex into the buffer
             MOVE.B      #$41,(A1)+          *write the ascii-hex value of 'A' into the buffer
-            oreg2ascii
             BRA         exit_op
 
 
@@ -1487,6 +1495,7 @@ terminator        DC.B        0                   *Null terminator
 
 
          END         pgm_start           *End of program and load address
+
 
 
 
