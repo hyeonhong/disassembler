@@ -81,8 +81,6 @@ oxreg2ascii MACRO
 oyreg2ascii MACRO
             MOVE.W      D0,D1
             ANDI.W      #%0000000000000111,D1
-            LSR.W       #8,D1
-            LSR.W       #1,D1
             ADDI.B      #$30,D1
             MOVE.B      D1,(A1)+            *write the ascii-hex value into the buffer
             ENDM
@@ -1496,6 +1494,7 @@ terminator        DC.B        0                   *Null terminator
 
 
          END         pgm_start           *End of program and load address
+
 
 
 
