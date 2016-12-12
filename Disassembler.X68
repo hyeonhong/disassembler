@@ -142,10 +142,10 @@ parsing_1   MACRO
             MOVE.B      D5,D3               *D3 - back-up
             MOVE.B      D1,D4               *D4 - back-up
 
+            ADDA.W      (A6),A5             *add displacement to the beginning of table
             CMPI.B      #7,D5
             BNE         ea_check\@
-            ADD.B       D1,D5
-            ADDA.W      (A6),A5             *add displacement to the beginning of table
+            ADD.B       D1,D5            
 ea_check\@  MOVE.B      (A5)+,D1
             CMP.B       D5,D1
             BEQ         set_as_bad
@@ -1434,6 +1434,7 @@ terminator        DC.B        0                   *Null terminator
 
 
          END         pgm_start           *End of program and load address
+
 
 
 
