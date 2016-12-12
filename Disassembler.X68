@@ -1408,6 +1408,7 @@ which_add   DC.L    0
 
 buffer      DS.W        100                  *Print buffer
 
+loop_num    DC.W        0
 bad_flag    DC.W        0
 jump_flag   DC.W        0
 imme_flag   DC.W        0
@@ -1434,6 +1435,7 @@ terminator        DC.B        0                   *Null terminator
 
 
          END         pgm_start           *End of program and load address
+
 
 
 
