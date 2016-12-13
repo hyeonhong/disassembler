@@ -288,7 +288,14 @@ the_end     MOVE.B      #9,D0               *halt console simulator
             
 
 *****************************************************************************************************
-* Subroutine I/O Code
+* Subroutine I/O
+* This subroutine takes the user input and saves it to the start/end address memory variable. During the process, multiple tests are done to check for length, validity, even boundary, memory range, legality of the user input.
+* A1 is set up as the reserved pointer for Trap #15 instruction.
+* A2 is set up as the pointer to the memory variable 'reader' that stores the user input of ASCII hex values.
+* A3 is set up as the pointer to the memory variable 'reader2' that stores the hex equivalent of user input in 'reader'.
+* A5 is set up as the pointer to the memory variable 'which_add' that indicates either start or end address.
+* A6 is set up as the pointer for either start or end address memory variable.
+*****************************************************************************************************
 
 
             
@@ -404,13 +411,22 @@ illegal     LEA         string7,A1
             TRAP        #15
             BRA         ask_start
 
-****************************************************************************            
+
 
 
 
 
 *****************************************************************************************************
 * Subroutine Op-Code
+* This subroutine disassembles the specified memory location and writes one line of instruction to the buffer. Non-EA operands are also handled in this subroutine.
+* A0 points to the memory location that will be decoded.
+* A1 points to the buffer that will be written.
+* A4 is set up as the pointer to the memory variable 'jump_flag' that stores the number of bytes, by which the memory pointer(A0) needs to be moved before the EA subroutine starts to decode the next memory location.
+* A5 points to the memory location of next case in the look-up table.
+* A6 points to the starting location of the look-up table.
+* D0 holds the memory value that this subroutine needs to decode.
+*****************************************************************************************************
+
 
 op_code     MOVEM.L     A2-A6/D0-D7,-(SP)   *Save the working registers on stack
             LEA         case_1,A6           *Set up A6 as the pointer to the instruction table
@@ -927,7 +943,16 @@ good_data   MOVE.W      #$0000,(A1)+        *write '0'(null) of ascii-hex into t
 
 ***************************************************************************************************
 * Subroutine EA
-
+* This subroutine decodes the EA part of instruction and writes the EA to the buffer. This subroutine is invoked by Op-Code subroutine in the middle of Op-Code.
+* A0 points to the memory location that will be decoded. 
+* A1 points to the buffer that will be written.
+* A2 is set up as the pointer to the memory variable 'jump_flag' that stores the number of bytes, by which the memory pointer(A0) needs to be moved before this subroutine starts to decode the next memory location.
+* A3 is set up as the pointer to the memory variable 'move_flag' that indicates whether or not the EA is for the MOVE instruction.
+* A4 is set up as the pointer to the memory variable 'bad_flag' that indicates whether or not the mode bit is valid.
+* A5 points to the starting location of the ea_table.
+* A6 is set up as the pointer to the memory variable 'dis_table' that stores the displacement values from the starting address of ea_table, indicating the first column of the specified instruction.
+* D0 holds the memory value that this subroutine needs to decode.
+***************************************************************************************************
 
 
 e_a         MOVEM.L     A2-A6/D0-D7,-(SP)
@@ -1494,6 +1519,7 @@ terminator        DC.B        0                   *Null terminator
 
 
          END         pgm_start           *End of program and load address
+
 
 
 
