@@ -1,8 +1,21 @@
 *----------------------------------------------------------------------------------------------------
-* Title      : I/O & Op-Code & EA
+* Title      : Disassembler
 * Written by : Team Bazinga
 * Date       : 12/14/2016
-* Description: -------------------------------------------------------------------------------k
+* Description: This program is an inverse assembler (disassembler) that will convert a memory image
+*              of instructions and data back to 68000 assembly language and output the disassembled
+*              code to the display.
+*
+*              The list of instructions that this program can disassemble is as below.
+*              ADD, ADDA, ADDI, AND, ANDI, ASL, ASR, BSR, CLR, CMP, CMPA, CMPI, EOR, EORI, EXG, 
+*              JMP, JSR, LEA, LSR, LSL, MOVE, MOVEA, MOVEM, NEG, NOP, NOT, OR, ROL, ROR, RTS,
+*              SUB, SUBA, SUBI, SWAP
+*----------------------------------------------------------------------------------------------------
+
+
+
+*----------------------------------------------------------------------------------------------------
+* Macros
 *----------------------------------------------------------------------------------------------------
 
 *D6 and A6 is set, prior to calling this Macro
@@ -42,7 +55,7 @@ to_hex\@    SUBI.B      #$30,D1
 even_num\@  LSL.B       #4,D2
             MOVE.B      D1,D3
             OR.B        D2,D3
-            MOVE.B      D3,(A6)+            *A6 is set up as the pointer to which data will be written
+            MOVE.B      D3,(A6)+            *A6 is the pointer to which data will be written
 hex_next\@  LSR.L       #8,D5
             SUBQ.B      #8,D7
             CMPI.B      #0,D7
@@ -95,7 +108,7 @@ ad2ascii\@  MOVE.W      D6,D1               *D6 holds the original hex-value
             BLE         adnumbers\@
             ADDI.W      #$7,D1
 adnumbers\@ ADDI.W      #$30,D1
-            MOVE.B      D1,(A1)+          *write the ascii-hex equivalent of hex-character to the buffer
+            MOVE.B      D1,(A1)+            *write the ascii-hex equivalent of hex-character to buffer
             LSR.W       #4,D5
             SUBQ.B      #4,D7
             CMPI.B      #0,D7
@@ -138,7 +151,7 @@ numbers_l\@ ADDI.B      #$30,D6
             BGE         ascii_l\@
             ENDM
 
-
+*parsing method for the EA subroutine
 parsing_1   MACRO
             MOVE.B      (A0)+,D0
             MOVE.B      D0,D1               *D1 - register #
@@ -179,17 +192,25 @@ parsing_2   MACRO
             ANDI.W      #%0000000000000111,D4
             ENDM
 
-*------------------------------------------------------------------------------
+*----------------------------------------------------------------------------------------------------
 * System Equates
-*------------------------------------------------------------------------------
+*----------------------------------------------------------------------------------------------------
 
 pgm_start   EQU         $1000               *Program runs here
 stack       EQU         $A0000              *Put stack here
 LF          EQU         $0A                 * ASCII for line feed
 CR          EQU         $0D                 * ASCII for carriage return
-*------------------------------------------------------------------------------
-* Program starts
-*------------------------------------------------------------------------------
+
+
+
+
+
+
+
+
+*----------------------------------------------------------------------------------------------------
+* Program starts here
+*----------------------------------------------------------------------------------------------------
         
             ORG         pgm_start           *Program Origin
             LEA         stack, SP           *Initialize the stack pointer
@@ -200,7 +221,7 @@ welcome     LEA         opening,A1          * display opening message
 
 beginning   LEA         which_add,A5
             BSR         io_code             *Take the input for starting address
-            MOVE.B      #1,(A5)             *change the value of which_add to 1 - which indicates the end address
+            MOVE.B      #1,(A5)             *which_add changed to 1, indicating the end address
             BSR         io_code             *Take the input for ending address
             MOVE.B      #0,(A5)             *Reset the value
 
@@ -284,20 +305,30 @@ the_end     MOVE.B      #9,D0               *halt console simulator
             TRAP        #15
             STOP        #$2700
 
+*----------------------------------------------------------------------------------------------------
+* Program ends here
+*----------------------------------------------------------------------------------------------------
 
-            
+
+
+
+
 
 *****************************************************************************************************
 * Subroutine I/O
-* This subroutine takes the user input and saves it to the start/end address memory variable. During the process, multiple tests are done to check for length, validity, even boundary, memory range, legality of the user input.
+* This subroutine takes the user input and saves it to the start/end address memory variable.
+* During the process, multiple tests are done to check for length, validity, even boundary,
+* memory range, legality of the user input.
+*
 * A1 is set up as the reserved pointer for Trap #15 instruction.
-* A2 is set up as the pointer to the memory variable 'reader' that stores the user input of ASCII hex values.
-* A3 is set up as the pointer to the memory variable 'reader2' that stores the hex equivalent of user input in 'reader'.
-* A5 is set up as the pointer to the memory variable 'which_add' that indicates either start or end address.
+* A2 is set up as the pointer to the memory variable 'reader' that stores the user input
+* of ASCII hex values.
+* A3 is set up as the pointer to the memory variable 'reader2' that stores the hex equivalent
+* of user input in 'reader'.
+* A5 is set up as the pointer to the memory variable 'which_add' that indicates
+* either start or end address.
 * A6 is set up as the pointer for either start or end address memory variable.
 *****************************************************************************************************
-
-
             
 io_code     MOVEM.L     A0-A6/D0-D7,-(SP)   *Save the working registers on stack
             LEA         which_add,A5
@@ -366,8 +397,7 @@ legal_check CMPI.B      #0,(A5)
 
 exit_io     MOVEM.L     (SP)+, A0-A6/D0-D7  *Restore the working registers from stack
             RTS
-            
-            
+          
 
 too_short   CMPI.W      #0,D1
             BEQ         ask_start
@@ -418,15 +448,18 @@ illegal     LEA         string7,A1
 
 *****************************************************************************************************
 * Subroutine Op-Code
-* This subroutine disassembles the specified memory location and writes one line of instruction to the buffer. Non-EA operands are also handled in this subroutine.
+* This subroutine disassembles the specified memory location and writes one line of instruction
+* to the buffer. Non-EA operands are also handled in this subroutine.
+*
 * A0 points to the memory location that will be decoded.
 * A1 points to the buffer that will be written.
-* A4 is set up as the pointer to the memory variable 'jump_flag' that stores the number of bytes, by which the memory pointer(A0) needs to be moved before the EA subroutine starts to decode the next memory location.
+* A4 is set up as the pointer to the memory variable 'jump_flag' that stores the number of bytes,
+* by which the memory pointer(A0) needs to be moved before the EA subroutine starts to
+* decode the next memory location.
 * A5 points to the memory location of next case in the look-up table.
 * A6 points to the starting location of the look-up table.
 * D0 holds the memory value that this subroutine needs to decode.
 *****************************************************************************************************
-
 
 op_code     MOVEM.L     A2-A6/D0-D7,-(SP)   *Save the working registers on stack
             LEA         case_1,A6           *Set up A6 as the pointer to the instruction table
@@ -941,19 +974,29 @@ good_data   MOVE.W      #$0000,(A1)+        *write '0'(null) of ascii-hex into t
 
 
 
+
+
+
 ***************************************************************************************************
 * Subroutine EA
-* This subroutine decodes the EA part of instruction and writes the EA to the buffer. This subroutine is invoked by Op-Code subroutine in the middle of Op-Code.
+* This subroutine decodes the EA part of instruction and writes the EA to the buffer.
+* This subroutine is invoked by Op-Code subroutine in the middle of Op-Code.
+*
 * A0 points to the memory location that will be decoded. 
 * A1 points to the buffer that will be written.
-* A2 is set up as the pointer to the memory variable 'jump_flag' that stores the number of bytes, by which the memory pointer(A0) needs to be moved before this subroutine starts to decode the next memory location.
-* A3 is set up as the pointer to the memory variable 'move_flag' that indicates whether or not the EA is for the MOVE instruction.
-* A4 is set up as the pointer to the memory variable 'bad_flag' that indicates whether or not the mode bit is valid.
+* A2 is set up as the pointer to the memory variable 'jump_flag' that stores the number of bytes,
+* by which the memory pointer(A0) needs to be moved before this subroutine starts to
+* decode the next memory location.
+* A3 is set up as the pointer to the memory variable 'move_flag' that indicates
+* whether or not the EA is for the MOVE instruction.
+* A4 is set up as the pointer to the memory variable 'bad_flag' that indicates
+* whether or not the mode bit is valid.
 * A5 points to the starting location of the ea_table.
-* A6 is set up as the pointer to the memory variable 'dis_table' that stores the displacement values from the starting address of ea_table, indicating the first column of the specified instruction.
+* A6 is set up as the pointer to the memory variable 'dis_table' that
+* stores the displacement values from the starting address of ea_table,
+* indicating the first column of the specified instruction.
 * D0 holds the memory value that this subroutine needs to decode.
 ***************************************************************************************************
-
 
 e_a         MOVEM.L     A2-A6/D0-D7,-(SP)
             LEA         jump_flag,A2
@@ -1048,7 +1091,7 @@ numberbit1  MOVE.W      D7,D6
             MOVE.B      D3,D1               *Restore the back-up to D1
             ADDI.B      #$30,D1
             MOVE.B      D1,(A1)+            *write the ascii-hex value of '0~7' into the buffer            
-            MOVE.W      #$2920,(A1)+          *write the ascii-hex value of ')' and ' ' into the buffer
+            MOVE.W      #$2920,(A1)+        *write the ascii-hex value of ')' and ' ' into the buffer
             BRA         ea_exit
 
 ea2b_6      CMPI.W      #%110,D5
@@ -1079,14 +1122,14 @@ numberbit2  MOVE.W      D7,D6
             ANDI.W      #$8000,D6
             CMPI.W      #0,D6
             BEQ         d_chosen1
-            MOVE.B      #$41,(A1)+        *write the ascii-hex value of 'A' into the buffer
+            MOVE.B      #$41,(A1)+          *write the ascii-hex value of 'A' into the buffer
             BRA         x_number1
-d_chosen1   MOVE.B      #$44,(A1)+        *write the ascii-hex value of 'D' into the buffer
+d_chosen1   MOVE.B      #$44,(A1)+          *write the ascii-hex value of 'D' into the buffer
 x_number1   MOVE.B      D3,D1               *Restore the back-up to D1
             ADDI.B      #$30,D1
             MOVE.B      D1,(A1)+            *write the ascii-hex value of '0~7' into the buffer
         
-            MOVE.W      #$2920,(A1)+          *write the ascii-hex value of ')' and ' ' into the buffer
+            MOVE.W      #$2920,(A1)+        *write the ascii-hex value of ')' and ' ' into the buffer
             BRA         ea_exit
 
 
@@ -1139,21 +1182,21 @@ ea2b_7_3    CMPI.B      #%010,D1
             ANDI.W      #$8000,D6
             CMPI.W      #0,D6
             BEQ         no_signbit3
-            MOVE.W      #$2D24,(A1)+          *write the ascii-hex value of '-$' into the buffer
+            MOVE.W      #$2D24,(A1)+         *write the ascii-hex value of '-$' into the buffer
             BRA         numberbit3
-no_signbit3 MOVE.W      #$2B24,(A1)+          *write the ascii-hex value of '+$' into the buffer
+no_signbit3 MOVE.W      #$2B24,(A1)+         *write the ascii-hex value of '+$' into the buffer
 numberbit3  MOVE.W      D7,D6
             ANDI.W      #$7FFF,D6
             add2ascii
-            MOVE.W      #$2C20,(A1)+        *write ',' and ' ' (space) of ascii-hex into the buffer            
+            MOVE.W      #$2C20,(A1)+         *write ',' and ' ' (space) of ascii-hex into the buffer            
 
-            MOVE.W      #$5043,(A1)+        *write the ascii-hex value of 'PC' into the buffer
+            MOVE.W      #$5043,(A1)+         *write the ascii-hex value of 'PC' into the buffer
             
-            MOVE.W      #$2920,(A1)+          *write the ascii-hex value of ')' and ' ' into the buffer
+            MOVE.W      #$2920,(A1)+         *write the ascii-hex value of ')' and ' ' into the buffer
             BRA         ea_exit
 
             * mode = #%111 & reg = #$011
-ea2b_7_4    MOVE.W      #$2028,(A1)+        *write the ascii-hex value of ' ' and '(' into the buffer
+ea2b_7_4    MOVE.W      #$2028,(A1)+         *write the ascii-hex value of ' ' and '(' into the buffer
 
             MOVE.W      (A0)+,D7
             MOVE.W      D7,D6
@@ -1175,14 +1218,14 @@ numberbit4  MOVE.W      D7,D6
             ANDI.W      #$8000,D6
             CMPI.W      #0,D6
             BEQ         d_chosen2
-            MOVE.B      #$41,(A1)+        *write the ascii-hex value of 'A' into the buffer
+            MOVE.B      #$41,(A1)+          *write the ascii-hex value of 'A' into the buffer
             BRA         x_number2
-d_chosen2   MOVE.B      #$44,(A1)+        *write the ascii-hex value of 'D' into the buffer
+d_chosen2   MOVE.B      #$44,(A1)+          *write the ascii-hex value of 'D' into the buffer
 x_number2   MOVE.B      D3,D1               *Restore the back-up to D1
             ADDI.B      #$30,D1
             MOVE.B      D1,(A1)+            *write the ascii-hex value of '0~7' into the buffer
         
-            MOVE.W      #$2920,(A1)+          *write the ascii-hex value of ')' and ' ' into the buffer
+            MOVE.W      #$2920,(A1)+         *write the ascii-hex value of ')' and ' ' into the buffer
             BRA         ea_exit
 
 
@@ -1193,7 +1236,7 @@ x_number2   MOVE.B      D3,D1               *Restore the back-up to D1
 
 
 
-
+* Look-up Table
 
 case_1	DC.W		$4E71,'NOP     ',$0000,$0000,$0000
 		DC.W		$4E75,'RTS     ',$0000,$0000,$0008
@@ -1323,6 +1366,10 @@ case_7	DC.W		$1000,'MOVE.B  ',$0000,$0000,$03C8
 null     DC.B    0                                 *Null terminator
 
 
+
+
+
+* EA Table
 
 ea_table		DC.W		$0F0F,$0F0F,$0F0F,$0F0F
 			DC.W		$0F0F,$0F0F,$0F0F,$0F0F
@@ -1501,74 +1548,7 @@ opening     DC.B   '            _________   _______     ___     _____  _____ ',C
             DC.B   '                                                      CSS422 DISSEMBLER ',CR,LF,0
 
 
-
-
-***************** TEST PROGRAM - START ***********************************
-
-        ORG     $20000
-        ADDI.B      #1,D7
-        LEA         start_addr,A4       *A4 will walk through the memory
-        MOVEM.L     A4/D0, (A6)        *Save the working registers on stack
-        CLR.L       D6            *Set the memory variable bad_addr to 0
-        CLR.W       D5            *Set the memory variable intended to 0
-
-terminator        DC.B        0                   *Null terminator
-
-***************** TEST PROGRAM - END **************************************
-
-
-
-         END         pgm_start           *End of program and load address
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+            END         pgm_start           *End of program and load address
 
 
 *~Font name~Courier New~
