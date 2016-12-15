@@ -245,7 +245,30 @@ beginning   LEA         which_add,A5
 op_loop     BSR         op_code
             *print to console
             LEA         buffer,A1           *Reset the buffer pointer
-            MOVE.B      #13,D0
+
+            *check if there's a space in the first character of operand
+            LEA         buffer,A3
+            ADDA.L      #24,A3
+            CMPI.B      #$20,(A3)+
+            BNE         no_space
+            LEA         del_space,A5
+            CLR.L       D0
+            MOVE.B      #50,D0
+mov_operand MOVE.B      (A3)+,(A5)+
+            SUBI.B      #1,D0
+            CMPI.B      #0,D0
+            BNE         mov_operand
+            *rewrite the operands back to buffer
+            LEA         buffer,A3
+            ADDA.L      #24,A3
+            LEA         del_space,A5
+            MOVE.B      #50,D0
+rewrite_opr MOVE.B      (A5)+,(A3)+
+            SUBI.B      #1,D0
+            CMPI.B      #0,D0
+            BNE         rewrite_opr            
+            
+no_space    MOVE.B      #13,D0
             TRAP        #15
             
             ADDQ.B      #1,D2
@@ -1519,6 +1542,7 @@ which_add   DC.L    0
 
 
 buffer      DS.W        100                  *Print buffer
+del_space   DS.W        100
 
 loop_num    DC.W        0
 bad_flag    DC.W        0
@@ -1559,6 +1583,7 @@ opening     DC.B   '            _________   _______     ___     _____  _____ ',C
 
 
             END         pgm_start           *End of program and load address
+
 
 
 
